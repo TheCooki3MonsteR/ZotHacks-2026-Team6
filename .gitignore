@@ -16,4 +16,3 @@ __pycache__/
 *.db
 *.db-journal
 .DS_Store
-supabase/
