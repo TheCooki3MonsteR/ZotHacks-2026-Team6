@@ -34,7 +34,7 @@ export default function AuthShell({ title, children }) {
           viewBox="0 28.9111 711 1024"
           fill="none"
           preserveAspectRatio="xMinYMax slice"
-          style={waveArt}
+          style={isMobile ? waveArtMobile : waveArt}
         >
           <path d={WAVE_PATH} fill="#FFFDF7" />
           <mask
@@ -266,10 +266,35 @@ const mascotImg = {
 };
 
 // ---- Mobile layout ----------------------------------------------------------
-// The wave art and mascot are hidden on phones so the form gets the full width.
-const pageMobile = { ...page, minHeight: "100dvh" };
+// Phones keep the full artwork. The wave panel becomes a background band across
+// the bottom of the page (faded into the cream background at its top edge) and
+// the anteater, with its shadow, is laid out in normal flow along the bottom
+// edge so it never covers the form.
+const pageMobile = {
+  ...page,
+  minHeight: "100dvh",
+  display: "flex",
+  flexDirection: "column",
+};
 
-const wavesMobile = { ...waves, display: "none" };
+const wavesMobile = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  top: "auto",
+  width: "100%",
+  height: "34vh",
+  overflow: "hidden",
+  pointerEvents: "none",
+};
+
+// Fade the top of the band into the page so the artwork has no hard edge.
+const waveArtMobile = {
+  ...waveArt,
+  maskImage: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 45%)",
+  WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 45%)",
+};
 
 const logoLinkMobile = {
   ...logoLink,
@@ -280,10 +305,23 @@ const logoLinkMobile = {
 
 const centerColumnMobile = {
   ...centerColumn,
-  padding: "88px 18px 40px",
+  minHeight: "auto",
+  // Grow to fill the space above the mascot, then let the mascot sit at the
+  // bottom of the viewport (on top of the wave band).
+  flex: "1 0 auto",
+  padding: "78px 18px 8px",
+  justifyContent: "flex-start",
   gap: 18,
 };
 
 const headingMobile = { ...heading, fontSize: 26 };
 
-const mascotWrapMobile = { ...mascotWrap, display: "none" };
+const mascotWrapMobile = {
+  position: "relative",
+  alignSelf: "flex-end",
+  right: "auto",
+  bottom: "auto",
+  width: "clamp(140px, 42vw, 190px)",
+  margin: "4px 10px 14px auto",
+  pointerEvents: "none",
+};
