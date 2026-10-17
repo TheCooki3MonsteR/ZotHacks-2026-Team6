@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useMockUser } from "../lib/useMockUser";
-import { localGetVisit } from "../lib/localStore";
+import { listMyVisits } from "../lib/collection";
 import { fetchRatingSummary } from "../lib/reviews";
 import FountainActions from "./FountainActions";
 import FountainReviews from "./FountainReviews";
@@ -28,13 +28,14 @@ export default function FountainDetailModal({ fountainId, onClose, onRatingChang
 
     fetch(`/api/fountains/${fountainId}`)
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error("not found"))))
-      .then((json) => {
+      .then(async (json) => {
+        // How many times this user has used the fountain (from the database).
+        let times = 0;
+        if (username) {
+          const mine = (await listMyVisits()).find((v) => v.fountain_id === fountainId);
+          times = mine?.times_visited ?? 0;
+        }
         if (!active) return;
-
-        // Visits are still stored in the browser for now.
-        const times = username
-          ? (localGetVisit(username, fountainId)?.times_visited ?? 0)
-          : 0;
 
         setPayload({ fountain: json.fountain, times });
         setStatus("ready");
@@ -144,7 +145,11 @@ export default function FountainDetailModal({ fountainId, onClose, onRatingChang
             <FountainReviews
               fountainId={fountainId}
               loggedIn={Boolean(username)}
-              onChanged={() => {
+              onChanged={(posted) => {
+                // Posting a review also counts as a refill: show the new count.
+                if (posted?.times_visited != null) {
+                  setPayload((p) => (p ? { ...p, times: posted.times_visited } : p));
+                }
                 refreshRating();
                 onRatingChanged?.(); // lets the map recolor its pin
               }}

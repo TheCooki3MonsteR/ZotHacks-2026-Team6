@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { recordFountainVisit } from "../lib/clientApi";
 import WaterDrop from "./WaterDrop";
 
@@ -18,6 +18,12 @@ export default function FountainActions({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
 
+  // Keep in sync when the parent learns a newer count (e.g. after posting a review).
+  useEffect(() => {
+    setTimes(initialTimesVisited);
+    setUsed(initialTimesVisited > 0);
+  }, [initialTimesVisited]);
+
   // Logged-out visitors get the "log in" prompt from the reviews section instead.
   if (!username) {
     return compact ? <p style={hint}>Log in to log your refills.</p> : null;
@@ -27,12 +33,17 @@ export default function FountainActions({
     if (busy) return;
     setBusy(true);
     setNote("");
-    const res = await recordFountainVisit(fountainId, username);
-    setTimes(res.times_visited);
-    setUsed(true);
-    setBusy(false);
-    setNote("Refill logged!");
-    onVisited?.(res.times_visited);
+    try {
+      const res = await recordFountainVisit(fountainId);
+      setTimes(res.times_visited);
+      setUsed(true);
+      setNote("Refill logged!");
+      onVisited?.(res.times_visited);
+    } catch (err) {
+      setNote(err.message || "Couldn't log your refill.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

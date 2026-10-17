@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMockUser } from "../../../lib/useMockUser";
 import { loadStats } from "../../../lib/clientApi";
+import { stickerSrc } from "../../../lib/collection";
 import SiteHeader from "../../../components/SiteHeader";
 import WaterDrop from "../../../components/WaterDrop";
 
@@ -140,6 +141,36 @@ export default function CollectablesPage() {
               })}
             </div>
 
+            {/* Stickers unlocked by posting reviews */}
+            <h2 style={sectionTitle}>
+              Your stickers
+              {stats?.stickers?.total > 0 &&
+                ` (${stats.stickers.owned.length}/${stats.stickers.total})`}
+            </h2>
+            {(stats?.stickers?.owned ?? []).length === 0 ? (
+              <p style={muted}>
+                Post a review at a fountain to unlock its Petr sticker.
+              </p>
+            ) : (
+              <div style={stickerGrid}>
+                {stats.stickers.owned.map((s) => (
+                  <div key={s.collectible_id} style={stickerCard}>
+                    <img
+                      src={stickerSrc(s.image_path)}
+                      alt={s.name}
+                      style={stickerImg}
+                    />
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{s.name}</span>
+                    {s.rarity && (
+                      <span style={{ fontSize: 12, color: "#6b7b8a", textTransform: "capitalize" }}>
+                        {s.rarity}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Per-fountain breakdown */}
             <h2 style={sectionTitle}>Your fountains</h2>
 
@@ -189,6 +220,23 @@ export default function CollectablesPage() {
     </div>
   );
 }
+
+const stickerGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+  gap: 14,
+};
+const stickerCard = {
+  background: "#ffffff",
+  borderRadius: 14,
+  padding: "14px 10px",
+  display: "grid",
+  justifyItems: "center",
+  gap: 4,
+  textAlign: "center",
+  boxShadow: "0 2px 8px rgba(28, 78, 158, 0.10)",
+};
+const stickerImg = { width: 110, height: 110, objectFit: "contain" };
 
 function Stat({ label, value }) {
   return (
