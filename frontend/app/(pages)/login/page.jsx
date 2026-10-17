@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AuthShell, {
   Field,
   authCard,
@@ -9,9 +10,11 @@ import AuthShell, {
   authLink,
   authError,
 } from "../../../components/AuthShell";
+import { login } from "../../../lib/auth";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const router = useRouter();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -20,34 +23,22 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        setError("Invalid email or password. Please try again.");
-        return;
-      }
-
-      // TODO: redirect to map / dashboard after login works
-      alert("Login successful!");
-    } catch {
-      setError("Something went wrong. Please try again.");
+      await login(username, password);
+      router.push("/homepage");
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
     }
   }
 
   return (
     <AuthShell title="WELCOME BACK">
       <form onSubmit={handleSubmit} style={authCard}>
-        <Field label="Email:">
+        <Field label="Username:">
           <input
-            type="email"
             required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             style={authInput}
           />
         </Field>

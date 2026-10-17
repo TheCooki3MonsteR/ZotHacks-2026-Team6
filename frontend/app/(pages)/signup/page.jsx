@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AuthShell, {
   Field,
   authCard,
@@ -9,8 +10,10 @@ import AuthShell, {
   authLink,
   authError,
 } from "../../../components/AuthShell";
+import { register } from "../../../lib/auth";
 
 export default function Signup() {
+  const router = useRouter();
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -32,31 +35,18 @@ export default function Signup() {
     }
 
     try {
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: form.username,
-          password: form.password,
-        }),
-      });
-
-      if (!res.ok) {
-        setError("Could not create account. That username may already be in use.");
-        return;
-      }
-
-      // TODO: redirect to login or map after signup works
-      alert("Account created!");
-    } catch {
-      setError("Something went wrong. Please try again.");
+      // The backend logs you in as part of registering, so go straight to the app.
+      await register(form.username, form.password);
+      router.push("/homepage");
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
     }
   }
 
   return (
     <AuthShell title="CREATE AN ACCOUNT">
       <form onSubmit={handleSubmit} style={authCard}>
-        <Field label="Username:" hint="Max 25 Characters">
+        <Field label="Username:" hint="3-25 letters, numbers, or _">
           <input
             required
             maxLength={25}
@@ -67,10 +57,11 @@ export default function Signup() {
           />
         </Field>
 
-        <Field label="Password:" hint="Max 30 Characters">
+        <Field label="Password:" hint="8-30 Characters">
           <input
             type="password"
             required
+            minLength={8}
             maxLength={30}
             autoComplete="new-password"
             value={form.password}
