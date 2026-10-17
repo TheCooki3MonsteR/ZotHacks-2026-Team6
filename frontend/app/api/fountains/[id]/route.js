@@ -1,11 +1,8 @@
-import {
-  getFountainsWithRatings,
-  getCommentsForFountain,
-} from "../../../../lib/fountains";
+import { getFountainsWithRatings } from "../../../../lib/fountains";
 
 // GET /api/fountains/:id
-// Full detail for one fountain, including its global rating and the 4 most
-// recent user comments. This is the "embedded URL" the map pop-up loads when a
+// Full detail for one fountain, including its global rating. Reviews are loaded
+// separately from the backend (/backend/fountains/:id/reviews). This is the "embedded URL" the map pop-up loads when a
 // pin is clicked.
 export async function GET(request, { params }) {
   const { id } = await params;
@@ -22,7 +19,5 @@ export async function GET(request, { params }) {
     return Response.json({ error: "Fountain not found" }, { status: 404 });
   }
 
-  const { comments } = await getCommentsForFountain(fountainId);
-
-  return Response.json({ fountain, comments, source });
+  return Response.json({ fountain, source });
 }

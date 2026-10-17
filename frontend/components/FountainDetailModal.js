@@ -1,26 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useMockUser } from "../lib/useMockUser";
-import { localGetComments, localGetVisit } from "../lib/localStore";
+import { localGetVisit } from "../lib/localStore";
+import { fetchRatingSummary } from "../lib/reviews";
 import FountainActions from "./FountainActions";
+import FountainReviews from "./FountainReviews";
 
-const SERIF = 'Georgia, "Times New Roman", Cambria, serif';
-const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
+const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const BLUE = "#1c4e9e";
-const POPUP_COMMENT_LIMIT = 4;
 
-function formatDate(value) {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-export default function FountainDetailModal({ fountainId, onClose }) {
+export default function FountainDetailModal({ fountainId, onClose, onRatingChanged }) {
   const { user } = useMockUser();
   const username = user?.username;
 
@@ -39,20 +30,12 @@ export default function FountainDetailModal({ fountainId, onClose }) {
       .then((json) => {
         if (!active) return;
 
-        // Visits and comments are stored in the browser for now (no backend
-        // yet), so merge them with the bundled demo comments.
-        const localComments = username
-          ? localGetComments(username, fountainId)
-          : [];
-        const comments = [...localComments, ...(json.comments ?? [])]
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          .slice(0, POPUP_COMMENT_LIMIT);
-
+        // Visits are still stored in the browser for now.
         const times = username
           ? (localGetVisit(username, fountainId)?.times_visited ?? 0)
           : 0;
 
-        setPayload({ fountain: json.fountain, comments, times });
+        setPayload({ fountain: json.fountain, times });
         setStatus("ready");
       })
       .catch(() => {
@@ -63,6 +46,30 @@ export default function FountainDetailModal({ fountainId, onClose }) {
       active = false;
     };
   }, [fountainId, username]);
+
+  // Pull the live average + count from the database (the backend), so a new
+  // review is reflected right away. If the backend is down we keep the numbers
+  // from the fountain API above.
+  const refreshRating = useCallback(async () => {
+    const summary = await fetchRatingSummary(fountainId);
+    if (!summary) return;
+    setPayload((p) =>
+      p
+        ? {
+            ...p,
+            fountain: {
+              ...p.fountain,
+              avg_rating: summary.average ?? 0,
+              rating_count: summary.count ?? 0,
+            },
+          }
+        : p,
+    );
+  }, [fountainId]);
+
+  useEffect(() => {
+    if (status === "ready") refreshRating();
+  }, [status, refreshRating]);
 
   // Close on Escape.
   useEffect(() => {
@@ -76,7 +83,6 @@ export default function FountainDetailModal({ fountainId, onClose }) {
   if (!fountainId) return null;
 
   const fountain = payload?.fountain;
-  const comments = payload?.comments ?? [];
 
   return (
     <div style={backdrop} onClick={onClose}>
@@ -130,23 +136,14 @@ export default function FountainDetailModal({ fountainId, onClose }) {
               </a>
             )}
 
-            <h3 style={commentsTitle}>Comments</h3>
-
-            {comments.length === 0 ? (
-              <p style={muted}>No comments yet — be the first to share one!</p>
-            ) : (
-              <ul style={commentList}>
-                {comments.map((c) => (
-                  <li key={c.comment_id} style={commentItem}>
-                    <div style={commentMeta}>
-                      <strong style={{ color: BLUE }}>{c.username}</strong>
-                      <span style={commentDate}>{formatDate(c.created_at)}</span>
-                    </div>
-                    <p style={commentBody}>{c.body}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <FountainReviews
+              fountainId={fountainId}
+              loggedIn={Boolean(username)}
+              onChanged={() => {
+                refreshRating();
+                onRatingChanged?.(); // lets the map recolor its pin
+              }}
+            />
 
             {/* Log a refill + leave a comment */}
             <FountainActions
@@ -155,19 +152,6 @@ export default function FountainDetailModal({ fountainId, onClose }) {
               initialTimesVisited={payload?.times ?? 0}
               onVisited={(times) =>
                 setPayload((p) => (p ? { ...p, times } : p))
-              }
-              onComment={(comment) =>
-                setPayload((p) =>
-                  p
-                    ? {
-                        ...p,
-                        comments: [comment, ...p.comments].slice(
-                          0,
-                          POPUP_COMMENT_LIMIT,
-                        ),
-                      }
-                    : p,
-                )
               }
             />
           </>
@@ -238,39 +222,4 @@ const mapLink = {
   textDecoration: "none",
 };
 
-const commentsTitle = {
-  fontFamily: SERIF,
-  fontSize: 20,
-  color: BLUE,
-  margin: "22px 0 10px",
-  borderTop: "1px solid #e7eef5",
-  paddingTop: 16,
-};
-
 const muted = { color: "#6b7b8a", fontSize: 14, margin: "8px 0" };
-
-const commentList = {
-  listStyle: "none",
-  margin: 0,
-  padding: 0,
-  display: "grid",
-  gap: 12,
-};
-
-const commentItem = {
-  background: "#f6f9fc",
-  borderRadius: 10,
-  padding: "10px 14px",
-};
-
-const commentMeta = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "baseline",
-  gap: 12,
-  fontSize: 14,
-};
-
-const commentDate = { color: "#8a97a3", fontSize: 12 };
-
-const commentBody = { margin: "6px 0 0", fontSize: 14, lineHeight: 1.45 };

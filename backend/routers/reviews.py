@@ -128,3 +128,30 @@ def delete_my_review(
     session.delete(review)
     session.commit()  # both deletes happen together
     return {"status": "deleted"}
+
+
+@router.get("/me/reviews")
+def my_reviews(
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """Every review the logged-in user has written (used for the 'reviews written' count)."""
+    rows = session.execute(
+        select(Review, Rating.rating)
+        .outerjoin(
+            Rating,
+            and_(Rating.user_id == Review.user_id, Rating.fountain_id == Review.fountain_id),
+        )
+        .where(Review.user_id == user.user_id)
+        .order_by(Review.created_at.desc(), Review.review_id.desc())
+    ).all()
+    return [
+        {
+            "review_id": review.review_id,
+            "fountain_id": review.fountain_id,
+            "rating": float(stars) if stars is not None else None,
+            "body": review.body,
+            "created_at": review.created_at,
+        }
+        for review, stars in rows
+    ]

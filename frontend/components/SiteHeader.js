@@ -28,8 +28,8 @@ export default function SiteHeader() {
             Log out
           </button>
         ) : (
-          // Per spec: the logged-out login button redirects to signup.
-          <Link href="/signup" style={navLink}>
+          // Logged-out visitors go to the login page (it links to signup).
+          <Link href="/login" style={navLink}>
             Login
           </Link>
         )}
@@ -38,10 +38,10 @@ export default function SiteHeader() {
   );
 }
 
-const SERIF = 'Georgia, "Times New Roman", Cambria, serif';
+const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const BLUE = "#1c4e9e";
 const NAV_BLUE = "#3e6fb8";
-const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 
 const header = {
   display: "flex",

@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import seed from "./uci-fountains.json";
-import { DEMO_RATINGS, DEMO_COMMENTS } from "./demo-data";
+import { DEMO_RATINGS } from "./demo-data";
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -67,51 +67,6 @@ export async function getFountainsWithRatings() {
     console.error("[lib/fountains] Supabase query failed:", err);
     return {
       fountains: withRatings(seed, DEMO_RATINGS),
-      source: "fallback",
-      error: err?.message ?? String(err),
-    };
-  }
-}
-
-// The fountain pop-up only shows the newest few comments.
-export const POPUP_COMMENT_LIMIT = 4;
-
-// Newest-first user comments for one fountain, capped at `limit`.
-export async function getCommentsForFountain(
-  fountainId,
-  limit = POPUP_COMMENT_LIMIT,
-) {
-  const demoComments = () =>
-    DEMO_COMMENTS.filter((c) => c.fountain_id === fountainId)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, limit);
-
-  const supabase = getSupabase();
-  if (!supabase) return { comments: demoComments(), source: "fallback" };
-
-  try {
-    const { data, error } = await supabase
-      .from("comments")
-      .select("comment_id, body, created_at, users(username)")
-      .eq("fountain_id", fountainId)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-
-    return {
-      comments: (data ?? []).map((c) => ({
-        comment_id: c.comment_id,
-        body: c.body,
-        created_at: c.created_at,
-        username: c.users?.username ?? "Anteater",
-      })),
-      source: "supabase",
-    };
-  } catch (err) {
-    console.error("[lib/fountains] comments query failed:", err);
-    return {
-      comments: demoComments(),
       source: "fallback",
       error: err?.message ?? String(err),
     };

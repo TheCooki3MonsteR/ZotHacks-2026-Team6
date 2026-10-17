@@ -3,6 +3,8 @@
 // Peter the anteater mascot bottom-right. Pages render the same chrome and only
 // own their own fields + submit handler.
 
+import Link from "next/link";
+
 const WAVE_PATH =
   "M609.589 5.82227C607.155 45.865 618.532 76.0485 639.179 122.958C659.875 169.979 687.599 229.373 704.728 318.555L705.045 320.209L705.246 321.881C716.773 417.795 711.071 478.141 687.31 534.777C675.999 561.736 661.2 586.38 645.317 611.6C629.06 637.416 611.397 664.25 591.191 699.025C576.584 724.165 567.145 749.365 562 774.459V872.487C576.941 951.413 624.506 1026.99 675.688 1093.69L599.526 1152.13C577.672 1123.65 553.693 1090.2 531.908 1052.91H0V28.9111H513.591C513.13 19.6208 513.158 10.0016 513.766 0L609.589 5.82227Z";
 
@@ -52,21 +54,23 @@ export default function AuthShell({ title, children }) {
         </svg>
       </aside>
 
-      {/* Logo, top-left over the waves */}
+      {/* Logo, top-left over the waves; clicking it goes back to the homepage */}
+      <Link href="/" aria-label="Zot Water - back to homepage" style={logoLink}>
       <svg
         viewBox="0 0 315 73"
         fill="none"
         role="img"
         aria-label="Zot Water"
-        style={logo}
+        style={logoSvg}
       >
-        <text fill="#6798C0" style={{ whiteSpace: "pre" }} xmlSpace="preserve" fontFamily="Wittgenstein, serif" fontSize="34" fontWeight="bold" letterSpacing="-0.02em">
+        <text fill="#6798C0" style={{ whiteSpace: "pre" }} xmlSpace="preserve" style={{ fontFamily: "inherit" }} fontSize="34" fontWeight="bold" letterSpacing="-0.02em">
           <tspan x="81.3958" y="47.21">Zot Water</tspan>
         </text>
         <path d="M273 11C271.44 20.02 260 28.63 260 37.24C260 45.85 265.824 52 273 52C280.176 52 286 45.85 286 37.24C286 28.63 274.56 20.02 273 11Z" fill="#6798C0" />
         <path d="M273 17C271.8 23.82 263 30.33 263 36.84C263 43.35 267.48 48 273 48C278.52 48 283 43.35 283 36.84C283 30.33 274.2 23.82 273 17Z" fill="#99D6EB" />
         <ellipse cx="3.22639" cy="3.84235" rx="3.22639" ry="3.84235" transform="matrix(0.836572 0.547858 -0.533721 0.845661 271.113 23.7871)" fill="#FFFDF8" />
       </svg>
+      </Link>
 
       {/* Center column: heading + form */}
       <section style={centerColumn}>
@@ -177,14 +181,17 @@ const waveArt = {
   display: "block",
 };
 
-const logo = {
+const logoLink = {
   position: "absolute",
   left: 16,
   top: 12,
   width: "clamp(170px, 19vw, 250px)",
-  height: "auto",
   zIndex: 2,
+  display: "block",
+  textDecoration: "none",
 };
+
+const logoSvg = { display: "block", width: "100%", height: "auto" };
 
 const centerColumn = {
   position: "relative",
@@ -209,7 +216,6 @@ const heading = {
   fontWeight: 700,
   letterSpacing: "0.01em",
   color: "#6798C0",
-  textShadow: "3px 2px 0 #4D80AA",
   textAlign: "center",
 };
 

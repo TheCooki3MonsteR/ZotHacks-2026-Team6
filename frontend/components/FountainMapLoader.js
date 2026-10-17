@@ -21,7 +21,7 @@ export default function FountainMapLoader({ height = 340, ...props }) {
         placeItems: "center",
         color: "#1c4e9e",
         fontSize: 14,
-        fontFamily: "system-ui, sans-serif",
+        fontFamily: "Epilogue, -apple-system, Roboto, Helvetica, sans-serif",
       }}
     >
       <FountainMap height={height} {...props} />
