@@ -1,17 +1,20 @@
 import os
-from dotenv import load_dotenv
 
 from fastapi import FastAPI
+from starlette.middleware.sessions import SessionMiddleware
+
+from routers import auth, fountains, ratings, reviews, visits  # importing this also loads your .env (through db.py)
 
 app = FastAPI()
 
-load_dotenv()                       # reads .env from the current folder
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.environ["SESSION_SECRET"],
+    same_site="lax",
+)
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+app.include_router(auth.router)
+app.include_router(fountains.router)
+app.include_router(ratings.router)
+app.include_router(reviews.router)
+app.include_router(visits.router)
