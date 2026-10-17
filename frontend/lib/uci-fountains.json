@@ -1,0 +1,401 @@
+[
+  {
+    "fountain_id": 363946,
+    "name": "Aldrich Hall",
+    "latitude": 33.648418,
+    "longitude": -117.841324,
+    "description": "Bottle filling station located near Room 102."
+  },
+  {
+    "fountain_id": 363957,
+    "name": "Anteater Instruction & Research Building",
+    "latitude": 33.642902,
+    "longitude": -117.838051,
+    "description": "Bottle filling station located near Room 1030."
+  },
+  {
+    "fountain_id": 583601,
+    "name": "Anteater Recreation Center",
+    "latitude": 33.643383,
+    "longitude": -117.828423,
+    "description": "Bottle filling station located near the 1st floor restrooms."
+  },
+  {
+    "fountain_id": 363941,
+    "name": "Art Studio",
+    "latitude": 33.650185,
+    "longitude": -117.844803,
+    "description": "Bottle filling station located near restrooms."
+  },
+  {
+    "fountain_id": 363971,
+    "name": "Berk Hall",
+    "latitude": 33.646271,
+    "longitude": -117.849503,
+    "description": "Bottle filling station located near Room 294 and in the kitchen."
+  },
+  {
+    "fountain_id": 363966,
+    "name": "Biological Sciences III",
+    "latitude": 33.64542,
+    "longitude": -117.846039,
+    "description": "Bottle filling station located near Room 1300."
+  },
+  {
+    "fountain_id": 577695,
+    "name": "Bison Modular",
+    "latitude": 33.643734,
+    "longitude": -117.846344,
+    "description": "Bottle filling station located in the kitchen."
+  },
+  {
+    "fountain_id": 577690,
+    "name": "CALIT2",
+    "latitude": 33.642876,
+    "longitude": -117.841263,
+    "description": "Bottle filling station located in kitchen on level 3."
+  },
+  {
+    "fountain_id": 363965,
+    "name": "Campus Village Community Center",
+    "latitude": 33.64484,
+    "longitude": -117.847008,
+    "description": "Bottle filling station located inside."
+  },
+  {
+    "fountain_id": 363956,
+    "name": "Continuing Education 4",
+    "latitude": 33.645912,
+    "longitude": -117.837288,
+    "description": "5 bottle filling stations available inside."
+  },
+  {
+    "fountain_id": 363973,
+    "name": "Crawford Hall",
+    "latitude": 33.648067,
+    "longitude": -117.848152,
+    "description": "Bottle filling stations located near: Weight room; Field house; Women's locker room; Men's locker room; Public restroom"
+  },
+  {
+    "fountain_id": 363948,
+    "name": "Cross-Cultural Center",
+    "latitude": 33.647842,
+    "longitude": -117.841843,
+    "description": "Bottle filling station located inside."
+  },
+  {
+    "fountain_id": 577698,
+    "name": "Dance Studio | Robert Cohen Theatre",
+    "latitude": 33.649361,
+    "longitude": -117.845589,
+    "description": "Bottle filling station located outside near the vending machines and restroom."
+  },
+  {
+    "fountain_id": 363960,
+    "name": "Donald Bren Hall",
+    "latitude": 33.643356,
+    "longitude": -117.841949,
+    "description": "Bottle filling station located near Room 1429."
+  },
+  {
+    "fountain_id": 363954,
+    "name": "Education Building",
+    "latitude": 33.647266,
+    "longitude": -117.835876,
+    "description": "Bottle filling station located near Room 1121."
+  },
+  {
+    "fountain_id": 577689,
+    "name": "Engineering Gateway",
+    "latitude": 33.643211,
+    "longitude": -117.840103,
+    "description": "Bottle filling stations located in: East Wing - 1st floor and near water fountains on the 2nd floor; West Wing - 2nd floor near Room 2305"
+  },
+  {
+    "fountain_id": 577687,
+    "name": "Engineering Hall",
+    "latitude": 33.643742,
+    "longitude": -117.841187,
+    "description": "Bottle filling station located in the 1st floor hallway near staircase."
+  },
+  {
+    "fountain_id": 577686,
+    "name": "Engineering Lecture Hall",
+    "latitude": 33.644371,
+    "longitude": -117.840736,
+    "description": "Bottle filling station located outside ELH near restrooms."
+  },
+  {
+    "fountain_id": 363958,
+    "name": "Engineering Tower",
+    "latitude": 33.644798,
+    "longitude": -117.841171,
+    "description": "Bottle filling station located near Room 435 and on level 6."
+  },
+  {
+    "fountain_id": 363964,
+    "name": "Environmental Health & Safety Services Facility",
+    "latitude": 33.639065,
+    "longitude": -117.850044,
+    "description": "Bottle filling station located near Room 124."
+  },
+  {
+    "fountain_id": 577691,
+    "name": "Frederick Reines Hall",
+    "latitude": 33.644131,
+    "longitude": -117.843468,
+    "description": "Bottle filling station located in the lobby on level 1."
+  },
+  {
+    "fountain_id": 577700,
+    "name": "Gillespie Neuroscience Research Facility",
+    "latitude": 33.644093,
+    "longitude": -117.851326,
+    "description": "Bottle filling station located near drinking fountain by the 1st floor restrooms."
+  },
+  {
+    "fountain_id": 363967,
+    "name": "Howard Schneiderman Lecture Hall",
+    "latitude": 33.645618,
+    "longitude": -117.844711,
+    "description": "Bottle filling station located inside."
+  },
+  {
+    "fountain_id": 577696,
+    "name": "Humanities Gateway",
+    "latitude": 33.648422,
+    "longitude": -117.84449,
+    "description": "Bottle filling station located on the 1st floor near the restrooms by the loading dock."
+  },
+  {
+    "fountain_id": 363944,
+    "name": "Humanities Hall",
+    "latitude": 33.647354,
+    "longitude": -117.84388,
+    "description": "Bottle filling station located near Room 232."
+  },
+  {
+    "fountain_id": 363959,
+    "name": "Information & Computer Science",
+    "latitude": 33.644291,
+    "longitude": -117.841827,
+    "description": "Bottle filling station located on 2nd floor near elevator."
+  },
+  {
+    "fountain_id": 577697,
+    "name": "Intercollegiate Athletics Building",
+    "latitude": 33.648163,
+    "longitude": -117.845467,
+    "description": "Bottle filling station located outside on the 2nd floor near the restroom."
+  },
+  {
+    "fountain_id": 363970,
+    "name": "Irvine Hall",
+    "latitude": 33.644924,
+    "longitude": -117.852623,
+    "description": "Bottle filling station located inside."
+  },
+  {
+    "fountain_id": 363943,
+    "name": "Krieger Hall",
+    "latitude": 33.647766,
+    "longitude": -117.843536,
+    "description": "Bottle filling station located near Room 211."
+  },
+  {
+    "fountain_id": 363949,
+    "name": "Langson Library",
+    "latitude": 33.647331,
+    "longitude": -117.841011,
+    "description": "Bottle filling station located near Room 264."
+  },
+  {
+    "fountain_id": 577688,
+    "name": "McDonnell Douglas Engineering Auditorium",
+    "latitude": 33.643883,
+    "longitude": -117.840691,
+    "description": "Bottle filling station located outside by drinking fountain near restrooms."
+  },
+  {
+    "fountain_id": 577694,
+    "name": "McGaugh Hall",
+    "latitude": 33.64521,
+    "longitude": -117.844627,
+    "description": "Bottle filling station located in the 1st floor hallway near the drinking fountain."
+  },
+  {
+    "fountain_id": 577699,
+    "name": "Medical Education Building",
+    "latitude": 33.644714,
+    "longitude": -117.852074,
+    "description": "Bottle filling stations located on: 1st floor kitchen near Business Center; 3rd floor near Room 3070"
+  },
+  {
+    "fountain_id": 363972,
+    "name": "Medical Surge II",
+    "latitude": 33.646957,
+    "longitude": -117.850334,
+    "description": "Bottle filling station located near Room 353."
+  },
+  {
+    "fountain_id": 363974,
+    "name": "Mesa Court Housing",
+    "latitude": 33.651699,
+    "longitude": -117.844223,
+    "description": "31 bottle filling stations available."
+  },
+  {
+    "fountain_id": 363975,
+    "name": "Middle Earth Housing",
+    "latitude": 33.644676,
+    "longitude": -117.837486,
+    "description": "26 bottle filling stations available."
+  },
+  {
+    "fountain_id": 363955,
+    "name": "Multipurpose Academic & Administrative Building",
+    "latitude": 33.64719,
+    "longitude": -117.837013,
+    "description": "Bottle filling station located on 4th floor."
+  },
+  {
+    "fountain_id": 363961,
+    "name": "Multipurpose Science & Technology Building",
+    "latitude": 33.642124,
+    "longitude": -117.844444,
+    "description": "Bottle filling station located near Room 134."
+  },
+  {
+    "fountain_id": 363963,
+    "name": "Natural Sciences II",
+    "latitude": 33.644238,
+    "longitude": -117.845047,
+    "description": "Bottle filling stations located near Rooms 1120 and 3120."
+  },
+  {
+    "fountain_id": 363939,
+    "name": "Newkirk Alumni Center",
+    "latitude": 33.652332,
+    "longitude": -117.846138,
+    "description": "Bottle filling station located in lobby."
+  },
+  {
+    "fountain_id": 577693,
+    "name": "Physical Sciences Classroom Building",
+    "latitude": 33.643429,
+    "longitude": -117.843513,
+    "description": "Bottle filling station located outside of PSCB."
+  },
+  {
+    "fountain_id": 577692,
+    "name": "Physical Sciences Lecture Hall",
+    "latitude": 33.643425,
+    "longitude": -117.844017,
+    "description": "Bottle filling station located outside of PSLH."
+  },
+  {
+    "fountain_id": 577684,
+    "name": "Public Services Building",
+    "latitude": 33.646446,
+    "longitude": -117.834656,
+    "description": "Bottle filling station located outside on ground floor near vending machines."
+  },
+  {
+    "fountain_id": 363962,
+    "name": "Rowland Hall",
+    "latitude": 33.644451,
+    "longitude": -117.844238,
+    "description": "Bottle filling station located near 1st floor elevator."
+  },
+  {
+    "fountain_id": 363968,
+    "name": "Science Library",
+    "latitude": 33.645966,
+    "longitude": -117.846825,
+    "description": "Bottle filling stations located near: Study center by Room 1184; On 2nd floor near restrooms"
+  },
+  {
+    "fountain_id": 363952,
+    "name": "Social & Behavioral Sciences Gateway",
+    "latitude": 33.647377,
+    "longitude": -117.839111,
+    "description": "Bottle filling station located on 1st floor near restrooms."
+  },
+  {
+    "fountain_id": 577685,
+    "name": "Social Ecology I",
+    "latitude": 33.646149,
+    "longitude": -117.838783,
+    "description": "Bottle filling stations located on 1st and 2nd floors."
+  },
+  {
+    "fountain_id": 363953,
+    "name": "Social Science Lab",
+    "latitude": 33.646027,
+    "longitude": -117.840042,
+    "description": "Bottle filling station located near Room 140."
+  },
+  {
+    "fountain_id": 363950,
+    "name": "Social Science Lecture Hall",
+    "latitude": 33.647312,
+    "longitude": -117.839745,
+    "description": "Bottle filling station located inside."
+  },
+  {
+    "fountain_id": 363951,
+    "name": "Social Science Tower",
+    "latitude": 33.646469,
+    "longitude": -117.840225,
+    "description": "Bottle filling station located near Room 175."
+  },
+  {
+    "fountain_id": 577701,
+    "name": "Sprague Hall",
+    "latitude": 33.644104,
+    "longitude": -117.852058,
+    "description": "Bottle filling station located in: Lobby on 1st floor near restrooms; Kitchen in the basement"
+  },
+  {
+    "fountain_id": 363969,
+    "name": "Steinhaus Hall",
+    "latitude": 33.646339,
+    "longitude": -117.844864,
+    "description": "Bottle filling station located near Room 139."
+  },
+  {
+    "fountain_id": 363947,
+    "name": "Student Center",
+    "latitude": 33.649208,
+    "longitude": -117.842339,
+    "description": "Bottle filling stations available on levels 1-4."
+  },
+  {
+    "fountain_id": 363945,
+    "name": "Student Services II",
+    "latitude": 33.648064,
+    "longitude": -117.842438,
+    "description": "Bottle filling station located near Room 1020A."
+  },
+  {
+    "fountain_id": 363940,
+    "name": "Studio Four",
+    "latitude": 33.650085,
+    "longitude": -117.84565,
+    "description": "Bottle filling station located near Room 120."
+  },
+  {
+    "fountain_id": 1114736,
+    "name": "William J. Gillespie Performance Studios",
+    "latitude": 33.65057,
+    "longitude": -117.845184,
+    "description": "Bottle filling station located in the walkway next to the vending machines."
+  },
+  {
+    "fountain_id": 363942,
+    "name": "Winifred Smith Hall",
+    "latitude": 33.649635,
+    "longitude": -117.844475,
+    "description": "Bottle filling station located near Room 182."
+  }
+]

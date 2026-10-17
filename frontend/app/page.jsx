@@ -1,10 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
+// The homepage lives at /homepage. The nav "Home" link points at "/", so route
+// that here instead of showing a blank/placeholder page.
 export default function Home() {
-  return (
-    <main>
-      <h1>UCI Water Station Test</h1>
-      <button onClick={() => alert("yay button works!")}>Test button</button>
-    </main>
-  );
+  redirect("/homepage");
 }

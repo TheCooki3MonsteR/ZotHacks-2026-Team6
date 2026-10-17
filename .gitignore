@@ -16,3 +16,6 @@ __pycache__/
 *.db
 *.db-journal
 .DS_Store
+
+# Supabase CLI local state (machine/project specific)
+supabase/.temp/
