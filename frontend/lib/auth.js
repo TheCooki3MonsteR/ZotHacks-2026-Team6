@@ -6,7 +6,7 @@
 export const AUTH_EVENT = "zothydrate:auth";
 
 // Backend errors look like {"detail": "text"} or, for validation, {"detail": [{"msg": "..."}]}.
-async function errorMessage(res, fallback) {
+export async function errorMessage(res, fallback) {
   try {
     const data = await res.json();
     if (typeof data.detail === "string") return data.detail;

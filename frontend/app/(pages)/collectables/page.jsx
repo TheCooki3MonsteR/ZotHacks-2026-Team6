@@ -6,8 +6,8 @@ import { useMockUser } from "../../../lib/useMockUser";
 import { loadStats } from "../../../lib/clientApi";
 import SiteHeader from "../../../components/SiteHeader";
 
-const SERIF = 'Georgia, "Times New Roman", Cambria, serif';
-const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
+const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const BLUE = "#1c4e9e";
 const CREAM = "#fbf4dc";
 
@@ -98,7 +98,7 @@ export default function CollectablesPage() {
             <p style={{ margin: 0, fontSize: 16 }}>
               Log in to see your collected fountains and refill stats.
             </p>
-            <Link href="/signup" style={cta}>
+            <Link href="/login" style={cta}>
               Log in
             </Link>
           </div>
@@ -112,7 +112,7 @@ export default function CollectablesPage() {
             <div style={statGrid}>
               <Stat label="Total refills" value={totalVisits} icon="💧" />
               <Stat label="Fountains collected" value={collected} icon="📍" />
-              <Stat label="Comments shared" value={commentsCount} icon="💬" />
+              <Stat label="Reviews written" value={commentsCount} icon="💬" />
             </div>
 
             {/* Milestones */}

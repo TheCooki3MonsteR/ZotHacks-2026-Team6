@@ -7,25 +7,60 @@ import SiteHeader from "../../../components/SiteHeader";
 import FountainMapLoader from "../../../components/FountainMapLoader";
 import FountainActions from "../../../components/FountainActions";
 
-const SERIF = 'Georgia, "Times New Roman", Cambria, serif';
-const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
+const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 
 const BLUE = "#1c4e9e";
 const CREAM = "#fbf4dc";
 const STAR = "#f6c445";
+const POPULAR_COUNT = 6;
 
 export default function Homepage() {
   const { loggedIn, user } = useMockUser();
   const [fountains, setFountains] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Popular list: most highly rated fountains.
+  // Popular list: the 6 highest-rated fountains. Ratings come live from the
+  // database (the FastAPI backend); fountains nobody has rated yet are ordered
+  // alphabetically, so an empty database still fills the list.
   useEffect(() => {
     let active = true;
-    fetch("/api/fountains/popular")
-      .then((res) => res.json())
-      .then((data) => {
-        if (active) setFountains(data.fountains ?? []);
+
+    async function load() {
+      const res = await fetch("/api/fountains");
+      const data = await res.json();
+      let list = data.fountains ?? [];
+
+      try {
+        const live = await fetch("/backend/fountains", { cache: "no-store" });
+        if (live.ok) {
+          const byId = new Map((await live.json()).map((f) => [f.fountain_id, f]));
+          list = list.map((f) => {
+            const l = byId.get(f.fountain_id);
+            return {
+              ...f,
+              avg_rating: l?.avg_rating ?? 0,
+              rating_count: l?.rating_count ?? 0,
+            };
+          });
+        }
+      } catch {
+        // backend unreachable: keep the ratings that came with the list
+      }
+
+      return [...list]
+        .sort(
+          (a, b) =>
+            b.avg_rating - a.avg_rating ||
+            b.rating_count - a.rating_count ||
+            a.name.localeCompare(b.name),
+        )
+        .slice(0, POPULAR_COUNT);
+    }
+
+    load()
+      .then((top) => {
+        if (active) setFountains(top);
       })
       .catch(() => {
         if (active) setFountains([]);
@@ -86,7 +121,7 @@ export default function Homepage() {
         {loading ? (
           <p style={muted}>Loading…</p>
         ) : fountains.length === 0 ? (
-          <p style={muted}>No ratings yet — be the first to rate a fountain!</p>
+          <p style={muted}>No fountains to show yet.</p>
         ) : (
           <div style={popularGrid}>
             {fountains.map((fountain) => {

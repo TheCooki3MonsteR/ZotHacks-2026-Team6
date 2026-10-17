@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -9,16 +9,28 @@ import FountainDetailModal from "./FountainDetailModal";
 
 const UCI_CENTER = [33.6461, -117.8427];
 
+// Pin color follows the average star rating: unrated = light grey, then
+// getting steadily darker blue the higher the rating (5 stars = dark blue).
+const NO_RATING = [154, 167, 181]; // #9aa7b5 light grey
+const ONE_STAR = [184, 205, 228]; // pale blue
+const FIVE_STARS = [18, 54, 122]; // #12367a dark blue
+
+function pinColor(rating) {
+  if (!(rating > 0)) return `rgb(${NO_RATING.join(",")})`;
+  const t = Math.min(Math.max((rating - 1) / 4, 0), 1);
+  const rgb = ONE_STAR.map((c, i) => Math.round(c + (FIVE_STARS[i] - c) * t));
+  return `rgb(${rgb.join(",")})`;
+}
+
 // Custom water-drop pin (avoids Leaflet's broken default icon URLs in bundlers).
-// Cached per rating tier so we only build a handful of icons.
+// Cached per half-star step so we only build a handful of icons.
 const iconCache = new Map();
 function getPinIcon(rating) {
-  const tier = rating >= 4 ? "high" : rating > 0 ? "mid" : "none";
-  if (!iconCache.has(tier)) {
-    const fill =
-      tier === "high" ? "#1c4e9e" : tier === "mid" ? "#3e6fb8" : "#9aa7b5";
+  const step = rating > 0 ? Math.round(rating * 2) / 2 : 0;
+  if (!iconCache.has(step)) {
+    const fill = pinColor(step);
     iconCache.set(
-      tier,
+      step,
       L.divIcon({
         className: "fountain-pin",
         html:
@@ -32,7 +44,7 @@ function getPinIcon(rating) {
       }),
     );
   }
-  return iconCache.get(tier);
+  return iconCache.get(step);
 }
 
 export default function FountainMap({
@@ -48,6 +60,24 @@ export default function FountainMap({
 
   useEffect(() => setMounted(true), []);
 
+  // Live star ratings from the database (the FastAPI backend). If the backend
+  // is unreachable we just keep the ratings that came with the fountain list.
+  const loadRatings = useCallback(async () => {
+    try {
+      const res = await fetch("/backend/fountains", { cache: "no-store" });
+      if (!res.ok) return;
+      const live = new Map((await res.json()).map((f) => [f.fountain_id, f]));
+      setFountains((prev) =>
+        prev.map((f) => {
+          const l = live.get(f.fountain_id);
+          return l ? { ...f, avg_rating: l.avg_rating, rating_count: l.rating_count } : f;
+        }),
+      );
+    } catch {
+      // keep what we have
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
     fetch("/api/fountains")
@@ -56,6 +86,7 @@ export default function FountainMap({
         if (!active) return;
         setFountains(data.fountains ?? []);
         setStatus("ready");
+        loadRatings();
       })
       .catch(() => {
         if (active) setStatus("error");
@@ -63,7 +94,7 @@ export default function FountainMap({
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadRatings]);
 
   const points = fountains.filter(
     (f) => Number.isFinite(f.latitude) && Number.isFinite(f.longitude),
@@ -110,6 +141,7 @@ export default function FountainMap({
           <FountainDetailModal
             fountainId={selectedId}
             onClose={() => setSelectedId(null)}
+            onRatingChanged={loadRatings}
           />,
           document.body,
         )}
@@ -125,6 +157,6 @@ const overlay = {
   background: "rgba(231, 241, 251, 0.85)",
   color: "#1c4e9e",
   fontSize: 14,
-  fontFamily: "system-ui, sans-serif",
+  fontFamily: "Epilogue, -apple-system, Roboto, Helvetica, sans-serif",
   zIndex: 500,
 };

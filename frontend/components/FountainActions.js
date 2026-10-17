@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { recordFountainVisit, postFountainComment } from "../lib/clientApi";
+import { recordFountainVisit } from "../lib/clientApi";
 
-// "I used this fountain" + comment form.
+// "I used this fountain" button (reviews live in FountainReviews).
 // `compact` renders just the button (used on the homepage cards).
 export default function FountainActions({
   fountainId,
@@ -11,16 +11,15 @@ export default function FountainActions({
   initialTimesVisited = 0,
   compact = false,
   onVisited,
-  onComment,
 }) {
   const [times, setTimes] = useState(initialTimesVisited);
   const [used, setUsed] = useState(initialTimesVisited > 0);
   const [busy, setBusy] = useState(false);
-  const [text, setText] = useState("");
   const [note, setNote] = useState("");
 
+  // Logged-out visitors get the "log in" prompt from the reviews section instead.
   if (!username) {
-    return <p style={hint}>Log in to log your refills and leave comments.</p>;
+    return compact ? <p style={hint}>Log in to log your refills.</p> : null;
   }
 
   async function handleUsed() {
@@ -33,18 +32,6 @@ export default function FountainActions({
     setBusy(false);
     setNote("Refill logged! 💧");
     onVisited?.(res.times_visited);
-  }
-
-  async function handleComment(e) {
-    e.preventDefault();
-    if (busy || !text.trim()) return;
-    setBusy(true);
-    setNote("");
-    const res = await postFountainComment(fountainId, username, text);
-    setBusy(false);
-    setText("");
-    setNote("Comment posted!");
-    onComment?.(res.comment);
   }
 
   return (
@@ -68,29 +55,6 @@ export default function FountainActions({
         )}
       </div>
 
-      {!compact &&
-        (used ? (
-          <form onSubmit={handleComment} style={form}>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="How was it? Water pressure, temperature, crowds…"
-              maxLength={500}
-              rows={3}
-              style={textarea}
-            />
-            <button
-              type="submit"
-              disabled={busy || !text.trim()}
-              style={submitBtn}
-            >
-              Post comment
-            </button>
-          </form>
-        ) : (
-          <p style={hint}>Use this fountain first to leave a comment.</p>
-        ))}
-
       {note && <p style={noteStyle}>{note}</p>}
     </div>
   );
@@ -107,7 +71,7 @@ const baseBtn = {
   fontSize: 14,
   fontWeight: 700,
   cursor: "pointer",
-  fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+  fontFamily: 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif',
 };
 
 const primaryBtn = { ...baseBtn, background: "#1c4e9e", color: "#ffffff" };
@@ -121,25 +85,6 @@ const compactBtn = {
 };
 
 const count = { fontSize: 13, color: "#6b7b8a" };
-
-const form = { display: "grid", gap: 8 };
-const textarea = {
-  width: "100%",
-  resize: "vertical",
-  border: "1px solid #d7e2ea",
-  borderRadius: 10,
-  padding: "10px 12px",
-  fontSize: 14,
-  fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-  outline: "none",
-};
-const submitBtn = {
-  ...baseBtn,
-  justifySelf: "start",
-  background: "#ffc72c",
-  color: "#1c4e9e",
-  padding: "9px 18px",
-};
 
 const hint = { fontSize: 13, color: "#6b7b8a", margin: "4px 0 0" };
 const noteStyle = { fontSize: 13, color: "#1c7a3e", margin: 0 };

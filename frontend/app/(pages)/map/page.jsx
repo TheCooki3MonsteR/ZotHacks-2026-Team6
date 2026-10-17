@@ -5,8 +5,8 @@ export const metadata = {
   title: "Water Fountain Map — Zot Water",
 };
 
-const SERIF = 'Georgia, "Times New Roman", Cambria, serif';
-const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
+const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const BLUE = "#1c4e9e";
 const CREAM = "#fbf4dc";
 
