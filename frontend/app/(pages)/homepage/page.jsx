@@ -6,6 +6,7 @@ import { useMockUser } from "../../../lib/useMockUser";
 import SiteHeader from "../../../components/SiteHeader";
 import FountainMapLoader from "../../../components/FountainMapLoader";
 import FountainActions from "../../../components/FountainActions";
+import WaterDrop from "../../../components/WaterDrop";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -86,7 +87,10 @@ export default function Homepage() {
           <div style={loggedIn ? { ...card, ...mapCardActive } : card}>
             <FountainMapLoader height={loggedIn ? 300 : 360} zoom={15} />
             <div style={cardFooter}>
-              <h2 style={cardTitle}>Water Fountains 💧</h2>
+              <h2 style={cardTitle}>
+                Water Fountains{" "}
+                <WaterDrop height={26} style={{ marginLeft: 2 }} />
+              </h2>
               <p style={cardSubtitle}>
                 A map of all the water fountains on the University of California,
                 Irvine Campus
@@ -103,7 +107,10 @@ export default function Homepage() {
                 style={{ ...cardImageShort, objectFit: "contain", background: "#f3ecd4" }}
               />
               <div style={cardFooter}>
-                <h2 style={cardTitle}>Collectables 💧✨</h2>
+                <h2 style={cardTitle}>
+                  Collectables{" "}
+                  <WaterDrop height={26} style={{ marginLeft: 2 }} />
+                </h2>
                 <p style={cardSubtitle}>See your experience</p>
               </div>
             </Link>
