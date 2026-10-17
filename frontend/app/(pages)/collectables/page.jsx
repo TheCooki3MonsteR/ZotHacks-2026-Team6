@@ -8,6 +8,7 @@ import { stickerSrc } from "../../../lib/collection";
 import SiteHeader from "../../../components/SiteHeader";
 import WaterDrop from "../../../components/WaterDrop";
 import Rosette from "../../../components/Rosette";
+import { useIsMobile } from "../../../lib/useIsMobile";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -35,6 +36,7 @@ function formatDate(value) {
 
 export default function CollectablesPage() {
   const { user, loggedIn } = useMockUser();
+  const isMobile = useIsMobile();
   const username = user?.username;
 
   const [mounted, setMounted] = useState(false);
@@ -92,11 +94,11 @@ export default function CollectablesPage() {
     <div style={page}>
       <SiteHeader />
 
-      <main style={content}>
-        <h1 style={title}>
-          Collectables <WaterDrop height={34} style={{ marginLeft: 4 }} />
+      <main style={isMobile ? contentMobile : content}>
+        <h1 style={isMobile ? titleMobile : title}>
+          Collectables <WaterDrop height={isMobile ? 26 : 34} style={{ marginLeft: 4 }} />
         </h1>
-        <p style={subtitle}>Hydrate and Level up!</p>
+        <p style={isMobile ? subtitleMobile : subtitle}>Hydrate and Level up!</p>
 
         {!mounted ? null : !loggedIn ? (
           <div style={emptyCard}>
@@ -114,15 +116,15 @@ export default function CollectablesPage() {
         ) : (
           <>
             {/* Stat tiles */}
-            <div style={statGrid}>
-              <Stat label="Total refills" value={totalVisits} />
-              <Stat label="Fountains collected" value={collected} />
-              <Stat label="Reviews written" value={commentsCount} />
+            <div style={isMobile ? statGridMobile : statGrid}>
+              <Stat label="Total refills" value={totalVisits} mobile={isMobile} />
+              <Stat label="Fountains collected" value={collected} mobile={isMobile} />
+              <Stat label="Reviews written" value={commentsCount} mobile={isMobile} />
             </div>
 
             {/* Milestones */}
-            <h2 style={sectionTitle}>Milestones</h2>
-            <div style={badgeRow}>
+            <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>Milestones</h2>
+            <div style={isMobile ? badgeRowMobile : badgeRow}>
               {BADGES.map((m) => {
                 const earned = totalVisits >= m.need;
                 return (
@@ -143,7 +145,7 @@ export default function CollectablesPage() {
             </div>
 
             {/* Stickers unlocked by posting reviews */}
-            <h2 style={sectionTitle}>
+            <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>
               Your stickers
               {stats?.stickers?.total > 0 &&
                 ` (${stats.stickers.owned.length}/${stats.stickers.total})`}
@@ -173,10 +175,10 @@ export default function CollectablesPage() {
             )}
 
             {/* Per-fountain breakdown */}
-            <h2 style={sectionTitle}>Your fountains</h2>
+            <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>Your fountains</h2>
 
             {visits.length === 0 ? (
-              <div style={emptyCard}>
+              <div style={isMobile ? emptyCardMobile : emptyCard}>
                 <p style={{ margin: 0, fontSize: 16 }}>
                   You haven&apos;t collected any fountains yet.
                 </p>
@@ -189,11 +191,11 @@ export default function CollectablesPage() {
                 </Link>
               </div>
             ) : (
-              <div style={visitGrid}>
+              <div style={isMobile ? visitGridMobile : visitGrid}>
                 {visits.map((v) => (
-                  <article key={v.fountain_id} style={visitCard}>
+                  <article key={v.fountain_id} style={isMobile ? visitCardMobile : visitCard}>
                     <div style={visitTop}>
-                      <h3 style={visitName}>{v.name}</h3>
+                      <h3 style={isMobile ? visitNameMobile : visitName}>{v.name}</h3>
                       <span style={countPill}>
                         {v.times_visited}×
                       </span>
@@ -239,11 +241,11 @@ const stickerCard = {
 };
 const stickerImg = { width: 110, height: 110, objectFit: "contain" };
 
-function Stat({ label, value }) {
+function Stat({ label, value, mobile = false }) {
   return (
-    <div style={statCard}>
-      <WaterDrop height={26} />
-      <span style={statValue}>{value}</span>
+    <div style={mobile ? statCardMobile : statCard}>
+      <WaterDrop height={mobile ? 22 : 26} />
+      <span style={mobile ? statValueMobile : statValue}>{value}</span>
       <span style={statLabel}>{label}</span>
     </div>
   );
@@ -322,7 +324,7 @@ const badge = {
 
 const visitGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(280px, 100%), 1fr))",
   gap: 20,
 };
 
@@ -389,3 +391,36 @@ const cta = {
   padding: "10px 18px",
   borderRadius: 10,
 };
+
+// ---- Mobile layout ----------------------------------------------------------
+const contentMobile = { ...content, padding: "18px 16px 48px" };
+
+const titleMobile = { ...title, fontSize: 30, margin: "4px 0 4px" };
+
+const subtitleMobile = { ...subtitle, fontSize: 15, margin: "0 0 20px" };
+
+const statGridMobile = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: 12,
+};
+
+const statCardMobile = { ...statCard, padding: "16px 18px" };
+
+const statValueMobile = { ...statValue, fontSize: 32 };
+
+const sectionTitleMobile = { ...sectionTitle, fontSize: 22, margin: "28px 0 12px" };
+
+const badgeRowMobile = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, 1fr)",
+  gap: 12,
+};
+
+const visitGridMobile = { display: "grid", gridTemplateColumns: "1fr", gap: 12 };
+
+const visitCardMobile = { ...visitCard, padding: "16px" };
+
+const visitNameMobile = { ...visitName, fontSize: 18 };
+
+const emptyCardMobile = { ...emptyCard, padding: "20px" };

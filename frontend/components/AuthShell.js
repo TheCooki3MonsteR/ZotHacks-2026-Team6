@@ -1,9 +1,12 @@
+"use client";
+
 // Shared shell for the auth pages (login + signup): the wave artwork down the
 // left, the "Zot Water" logo top-left, the heading + form centered, and the
 // Peter the anteater mascot bottom-right. Pages render the same chrome and only
 // own their own fields + submit handler.
 
 import Link from "next/link";
+import { useIsMobile } from "../lib/useIsMobile";
 
 const WAVE_PATH =
   "M609.589 5.82227C607.155 45.865 618.532 76.0485 639.179 122.958C659.875 169.979 687.599 229.373 704.728 318.555L705.045 320.209L705.246 321.881C716.773 417.795 711.071 478.141 687.31 534.777C675.999 561.736 661.2 586.38 645.317 611.6C629.06 637.416 611.397 664.25 591.191 699.025C576.584 724.165 567.145 749.365 562 774.459V872.487C576.941 951.413 624.506 1026.99 675.688 1093.69L599.526 1152.13C577.672 1123.65 553.693 1090.2 531.908 1052.91H0V28.9111H513.591C513.13 19.6208 513.158 10.0016 513.766 0L609.589 5.82227Z";
@@ -21,10 +24,12 @@ const LIGHT_STRIPES = [
 ];
 
 export default function AuthShell({ title, children }) {
+  const isMobile = useIsMobile();
+
   return (
-    <main style={page}>
+    <main style={isMobile ? pageMobile : page}>
       {/* Decorative background: wave artwork down the left side */}
-      <aside style={waves} aria-hidden="true">
+      <aside style={isMobile ? wavesMobile : waves} aria-hidden="true">
         <svg
           viewBox="0 28.9111 711 1024"
           fill="none"
@@ -55,7 +60,7 @@ export default function AuthShell({ title, children }) {
       </aside>
 
       {/* Logo, top-left over the waves; clicking it goes back to the homepage */}
-      <Link href="/" aria-label="Zot Water - back to homepage" style={logoLink}>
+      <Link href="/" aria-label="Zot Water - back to homepage" style={isMobile ? logoLinkMobile : logoLink}>
       <svg
         viewBox="0 0 315 73"
         fill="none"
@@ -73,13 +78,13 @@ export default function AuthShell({ title, children }) {
       </Link>
 
       {/* Center column: heading + form */}
-      <section style={centerColumn}>
-        <h1 style={heading}>{title}</h1>
+      <section style={isMobile ? centerColumnMobile : centerColumn}>
+        <h1 style={isMobile ? headingMobile : heading}>{title}</h1>
         {children}
       </section>
 
       {/* Decorative mascot, bottom-right; pointer events pass through */}
-      <div style={mascotWrap}>
+      <div style={isMobile ? mascotWrapMobile : mascotWrap}>
         <svg viewBox="0 0 266 88" fill="none" aria-hidden="true" style={mascotShadow}>
           <ellipse cx="133" cy="44" rx="133" ry="44" fill="#AFAFAF" fillOpacity="0.69" />
         </svg>
@@ -259,3 +264,26 @@ const mascotImg = {
   transform: "scaleX(-1)",
   objectFit: "contain",
 };
+
+// ---- Mobile layout ----------------------------------------------------------
+// The wave art and mascot are hidden on phones so the form gets the full width.
+const pageMobile = { ...page, minHeight: "100dvh" };
+
+const wavesMobile = { ...waves, display: "none" };
+
+const logoLinkMobile = {
+  ...logoLink,
+  left: 14,
+  top: 10,
+  width: "clamp(140px, 45vw, 180px)",
+};
+
+const centerColumnMobile = {
+  ...centerColumn,
+  padding: "88px 18px 40px",
+  gap: 18,
+};
+
+const headingMobile = { ...heading, fontSize: 26 };
+
+const mascotWrapMobile = { ...mascotWrap, display: "none" };

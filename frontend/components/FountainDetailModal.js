@@ -7,6 +7,7 @@ import { fetchRatingSummary } from "../lib/reviews";
 import FountainActions from "./FountainActions";
 import FountainReviews from "./FountainReviews";
 import WaterDrop from "./WaterDrop";
+import { useIsMobile } from "../lib/useIsMobile";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -15,6 +16,7 @@ const BLUE = "#1c4e9e";
 export default function FountainDetailModal({ fountainId, onClose, onRatingChanged }) {
   const { user } = useMockUser();
   const username = user?.username;
+  const isMobile = useIsMobile();
 
   const [payload, setPayload] = useState(null);
   const [status, setStatus] = useState("loading");
@@ -87,15 +89,20 @@ export default function FountainDetailModal({ fountainId, onClose, onRatingChang
   const fountain = payload?.fountain;
 
   return (
-    <div style={backdrop} onClick={onClose}>
+    <div style={isMobile ? backdropMobile : backdrop} onClick={onClose}>
       <div
-        style={modal}
+        style={isMobile ? modalMobile : modal}
         role="dialog"
         aria-modal="true"
         aria-label="Water fountain details"
         onClick={(e) => e.stopPropagation()}
       >
-        <button type="button" onClick={onClose} style={closeBtn} aria-label="Close">
+        <button
+          type="button"
+          onClick={onClose}
+          style={isMobile ? closeBtnMobile : closeBtn}
+          aria-label="Close"
+        >
           ✕
         </button>
 
@@ -106,7 +113,7 @@ export default function FountainDetailModal({ fountainId, onClose, onRatingChang
 
         {status === "ready" && fountain && (
           <>
-            <h2 style={title}>
+            <h2 style={isMobile ? titleMobile : title}>
               <WaterDrop height={26} style={{ marginRight: 8 }} />
               {fountain.name}
             </h2>
@@ -233,3 +240,20 @@ const mapLink = {
 };
 
 const muted = { color: "#6b7b8a", fontSize: 14, margin: "8px 0" };
+
+// ---- Mobile layout: full-width bottom sheet ---------------------------------
+const backdropMobile = { ...backdrop, padding: 0, alignItems: "flex-end" };
+
+const modalMobile = {
+  ...modal,
+  boxSizing: "border-box",
+  width: "100%",
+  maxWidth: "100%",
+  maxHeight: "92vh",
+  borderRadius: "18px 18px 0 0",
+  padding: "22px 16px 24px",
+};
+
+const titleMobile = { ...title, fontSize: 22, margin: "0 30px 8px 0" };
+
+const closeBtnMobile = { ...closeBtn, top: 12, right: 12 };

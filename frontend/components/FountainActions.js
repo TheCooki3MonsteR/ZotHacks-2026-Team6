@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { recordFountainVisit } from "../lib/clientApi";
 import WaterDrop from "./WaterDrop";
+import { useIsMobile } from "../lib/useIsMobile";
 
 // "I used this fountain" button (reviews live in FountainReviews).
 // `compact` renders just the button (used on the homepage cards).
@@ -17,6 +18,7 @@ export default function FountainActions({
   const [used, setUsed] = useState(initialTimesVisited > 0);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const isMobile = useIsMobile();
 
   // Keep in sync when the parent learns a newer count (e.g. after posting a review).
   useEffect(() => {
@@ -47,20 +49,30 @@ export default function FountainActions({
   }
 
   return (
-    <div style={compact ? wrapCompact : wrap}>
-      <div style={row}>
+    <div style={compact ? wrapCompact : isMobile ? wrapMobile : wrap}>
+      <div style={compact ? row : isMobile ? rowMobile : row}>
         <button
           type="button"
           onClick={handleUsed}
           disabled={busy}
-          style={compact ? compactBtn : used ? secondaryBtn : primaryBtn}
+          style={
+            compact
+              ? compactBtn
+              : used
+                ? isMobile
+                  ? secondaryBtnMobile
+                  : secondaryBtn
+                : isMobile
+                  ? primaryBtnMobile
+                  : primaryBtn
+          }
         >
           {used ? "Used it again" : "I used this fountain"}
           <WaterDrop height={16} style={{ marginLeft: 6 }} />
         </button>
 
         {!compact && (
-          <span style={count}>
+          <span style={isMobile ? countMobile : count}>
             {times > 0
               ? `You've used this ${times} time${times === 1 ? "" : "s"}`
               : "Not used yet"}
@@ -105,3 +117,25 @@ const count = { fontSize: 13, color: "#6b7b8a" };
 
 const hint = { fontSize: 13, color: "#6b7b8a", margin: "4px 0 0" };
 const noteStyle = { fontSize: 13, color: "#1c7a3e", margin: 0 };
+
+// ---- Mobile layout ----------------------------------------------------------
+const wrapMobile = { ...wrap, marginTop: 16 };
+const rowMobile = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
+  gap: 8,
+};
+const primaryBtnMobile = {
+  ...primaryBtn,
+  width: "100%",
+  padding: "12px 18px",
+  fontSize: 15,
+};
+const secondaryBtnMobile = {
+  ...secondaryBtn,
+  width: "100%",
+  padding: "12px 18px",
+  fontSize: 15,
+};
+const countMobile = { ...count, textAlign: "center" };
