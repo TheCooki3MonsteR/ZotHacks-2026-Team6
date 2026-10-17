@@ -89,3 +89,25 @@ class Review(Base):
     fountain_id: Mapped[int] = mapped_column(ForeignKey("water_fountains.fountain_id"))
     body: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Collectible(Base):
+    """A sticker (e.g. 'Beanie Petr'). image_path is a file under frontend/public/ (e.g. collectibles/petr.png)."""
+
+    __tablename__ = "collectibles"
+
+    collectible_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    fountain_id: Mapped[int] = mapped_column(ForeignKey("water_fountains.fountain_id"))
+    name: Mapped[str] = mapped_column(Text, unique=True)
+    image_path: Mapped[str] = mapped_column(Text)
+    rarity: Mapped[str | None] = mapped_column(Text)
+
+
+class UserCollectible(Base):
+    """Which user owns which sticker. One row per (user, sticker), so you can't get the same one twice."""
+
+    __tablename__ = "user_collectibles"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), primary_key=True)
+    collectible_id: Mapped[int] = mapped_column(ForeignKey("collectibles.collectible_id"), primary_key=True)
+    obtained_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

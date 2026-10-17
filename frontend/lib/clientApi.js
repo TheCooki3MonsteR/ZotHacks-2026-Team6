@@ -1,21 +1,24 @@
-// Frontend data layer for the collectables feature.
-//
-// There is no backend yet, so visits are stored in the browser
-// (localStorage), scoped per username. When the real backend lands, replace the
-// bodies of these functions with calls to the API — the components and
-// the collectables page only use this module, so nothing else needs to change.
+// Frontend data layer for the collectables feature. Everything now lives in the
+// database (through the FastAPI backend); see lib/collection.js and lib/reviews.js.
 
-import { localGetStats, localRecordVisit } from "./localStore";
+import { listMyStickers, listMyVisits, recordVisit } from "./collection";
 import { countMyReviews } from "./reviews";
 
-export async function recordFountainVisit(fountainId, username) {
-  return {
-    times_visited: localRecordVisit(username, fountainId),
-  };
+export async function recordFountainVisit(fountainId) {
+  return recordVisit(fountainId); // { times_visited, last_visited }
 }
 
-export async function loadStats(username) {
-  // Visits are still local; the review count comes from the database.
-  const stats = localGetStats(username);
-  return { ...stats, comments_count: await countMyReviews() };
+export async function loadStats() {
+  const [visits, stickers, reviewCount] = await Promise.all([
+    listMyVisits(),
+    listMyStickers(),
+    countMyReviews(),
+  ]);
+  return {
+    total_visits: visits.reduce((n, v) => n + v.times_visited, 0),
+    fountains_visited: visits.length,
+    comments_count: reviewCount,
+    visits,
+    stickers, // { total, owned: [...] }
+  };
 }

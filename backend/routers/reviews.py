@@ -5,8 +5,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from db import get_session
-from models import Rating, Review, User, WaterFountain
+from models import Collectible, Rating, Review, User, UserCollectible, UserVisited, WaterFountain
 from routers.auth import get_current_user
+from routers.collection import sticker_json
 
 router = APIRouter(prefix="/api", tags=["reviews"])
 
@@ -61,7 +62,11 @@ def add_review(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    """Write a review: stars + text, saved together or not at all."""
+    """Write a review: stars + text, saved together or not at all.
+
+    Posting a review also (a) counts as one more visit to this fountain and
+    (b) unlocks this fountain's sticker(s) if the user doesn't have them yet.
+    """
     if session.get(WaterFountain, fountain_id) is None:
         raise HTTPException(404, "Fountain not found.")
 
@@ -89,7 +94,34 @@ def add_review(
     review = Review(user_id=user.user_id, fountain_id=fountain_id, body=text)
     session.add(review)
 
-    # One commit for both, so a failure can't leave stars without a review (or the reverse).
+    # 3) count it as a visit: first time creates the row, later ones add 1 (the database does the +1)
+    visit = session.get(UserVisited, (user.user_id, fountain_id))
+    if visit is None:
+        visit = UserVisited(user_id=user.user_id, fountain_id=fountain_id)
+        session.add(visit)
+    else:
+        visit.times_visited = UserVisited.times_visited + 1
+        visit.last_visited = func.now()
+
+    # 4) unlock this fountain's stickers that the user doesn't own yet
+    owned = set(
+        session.scalars(
+            select(UserCollectible.collectible_id).where(UserCollectible.user_id == user.user_id)
+        )
+    )
+    new_stickers = [
+        sticker
+        for sticker in session.scalars(
+            select(Collectible)
+            .where(Collectible.fountain_id == fountain_id)
+            .order_by(Collectible.collectible_id)
+        )
+        if sticker.collectible_id not in owned
+    ]
+    for sticker in new_stickers:
+        session.add(UserCollectible(user_id=user.user_id, collectible_id=sticker.collectible_id))
+
+    # One commit for everything, so a failure can't leave stars without a review (or the reverse).
     try:
         session.commit()
     except IntegrityError as error:
@@ -99,6 +131,7 @@ def add_review(
             raise HTTPException(409, ALREADY_REVIEWED)
         raise
     session.refresh(review)  # fills in review_id and created_at, which the database creates
+    session.refresh(visit)  # the visit count as the database saved it
 
     return {
         "review_id": review.review_id,
@@ -107,6 +140,8 @@ def add_review(
         "body": review.body,
         "created_at": review.created_at,
         "is_mine": True,
+        "times_visited": visit.times_visited,  # the user's updated "I used this fountain" count
+        "stickers": [sticker_json(s) for s in new_stickers],  # only the ones unlocked just now
     }
 
 

@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 
-from routers import auth, fountains, ratings, reviews, visits  # importing this also loads your .env (through db.py)
+from routers import auth, collection, fountains, ratings, reviews, visits  # importing this also loads your .env (through db.py)
 
 app = FastAPI()
 
@@ -14,6 +14,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(collection.router)
 app.include_router(fountains.router)
 app.include_router(ratings.router)
 app.include_router(reviews.router)

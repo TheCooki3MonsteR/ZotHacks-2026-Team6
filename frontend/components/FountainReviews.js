@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { addReview, deleteReview, listReviews } from "../lib/reviews";
+import { stickerSrc } from "../lib/collection";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -32,6 +33,7 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [reward, setReward] = useState(null); // what the last review unlocked
 
   const load = useCallback(async () => {
     try {
@@ -60,11 +62,12 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
     setBusy(true);
     setError("");
     try {
-      await addReview(fountainId, stars, text.trim());
+      const posted = await addReview(fountainId, stars, text.trim());
       setStars(0);
       setText("");
+      setReward({ stickers: posted.stickers ?? [], times: posted.times_visited });
       await load();
-      onChanged?.();
+      onChanged?.(posted);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -90,6 +93,40 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
   return (
     <section>
       <h3 style={heading}>Reviews</h3>
+
+      {reward && (
+        <div style={rewardBox} role="status">
+          {reward.stickers.length > 0 ? (
+            reward.stickers.map((s) => (
+              <div key={s.collectible_id} style={rewardRow}>
+                <img
+                  src={stickerSrc(s.image_path)}
+                  alt={s.name}
+                  style={rewardImg}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+                <div>
+                  <strong style={{ color: BLUE }}>Sticker unlocked!</strong>
+                  <div style={{ fontSize: 15, fontWeight: 700 }}>{s.name}</div>
+                  {s.rarity && (
+                    <span style={{ ...rarityPill, ...(RARITY[s.rarity] ?? RARITY.common) }}>
+                      {s.rarity}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <strong style={{ color: BLUE }}>Review posted!</strong>
+          )}
+          <div style={rewardNote}>
+            Refill logged — you&apos;ve now used this fountain {reward.times}{" "}
+            {reward.times === 1 ? "time" : "times"}.
+          </div>
+        </div>
+      )}
 
       {status === "loading" && <p style={muted}>Loading reviews…</p>}
       {status === "error" && <p style={muted}>Couldn&apos;t load reviews right now.</p>}
@@ -246,4 +283,31 @@ const loginBtn = {
   textDecoration: "none",
   fontFamily: SANS,
 };
+const RARITY = {
+  common: { background: "#e7eef5", color: "#4a5b6b" },
+  rare: { background: "#d6e6fa", color: "#1c4e9e" },
+  epic: { background: "#e8dcf8", color: "#6a3fa8" },
+  legendary: { background: "#fde7a8", color: "#8a5a00" },
+};
+const rewardBox = {
+  background: "#fff9e3",
+  border: "1px solid #f3e1a0",
+  borderRadius: 12,
+  padding: "12px 14px",
+  margin: "0 0 12px",
+  display: "grid",
+  gap: 8,
+};
+const rewardRow = { display: "flex", alignItems: "center", gap: 14 };
+const rewardImg = { width: 84, height: 84, objectFit: "contain" };
+const rarityPill = {
+  display: "inline-block",
+  marginTop: 4,
+  padding: "2px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: "capitalize",
+};
+const rewardNote = { fontSize: 13, color: "#6b5d1e" };
 const errorStyle = { fontSize: 13, color: "#c0392b", margin: "8px 0 0" };
