@@ -6,6 +6,7 @@ import { localGetVisit } from "../lib/localStore";
 import { fetchRatingSummary } from "../lib/reviews";
 import FountainActions from "./FountainActions";
 import FountainReviews from "./FountainReviews";
+import WaterDrop from "./WaterDrop";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -104,7 +105,10 @@ export default function FountainDetailModal({ fountainId, onClose, onRatingChang
 
         {status === "ready" && fountain && (
           <>
-            <h2 style={title}>💧 {fountain.name}</h2>
+            <h2 style={title}>
+              <WaterDrop height={26} style={{ marginRight: 8 }} />
+              {fountain.name}
+            </h2>
 
             <div style={ratingRow}>
               <span style={{ color: "#f6c445" }}>★</span>
@@ -119,7 +123,8 @@ export default function FountainDetailModal({ fountainId, onClose, onRatingChang
 
             {Number.isFinite(fountain.latitude) && (
               <p style={locationLine}>
-                📍 {fountain.latitude.toFixed(5)}, {fountain.longitude.toFixed(5)}
+                <WaterDrop height={15} style={{ marginRight: 6 }} />
+                {fountain.latitude.toFixed(5)}, {fountain.longitude.toFixed(5)}
               </p>
             )}
 

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" role="img" aria-label="Water droplet">
+  <!-- Transparent background: only the droplet is painted. -->
+  <!-- Outer blue droplet -->
+  <path
+    d="M60 8 C38 44 10 72 10 105 A50 50 0 0 0 110 105 C110 72 82 44 60 8 Z"
+    fill="#5b86b5"
+  />
+  <!-- Inner light-blue fill -->
+  <path
+    d="M60 30 C43 58 21 78 21 105 A39 39 0 0 0 99 105 C99 78 77 58 60 30 Z"
+    fill="#a9d3e8"
+  />
+  <!-- White highlight (kept inside the droplet) -->
+  <circle cx="47" cy="78" r="10" fill="#ffffff" />
+</svg>

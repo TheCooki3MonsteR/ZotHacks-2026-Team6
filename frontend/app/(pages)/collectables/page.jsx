@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMockUser } from "../../../lib/useMockUser";
 import { loadStats } from "../../../lib/clientApi";
 import SiteHeader from "../../../components/SiteHeader";
+import WaterDrop from "../../../components/WaterDrop";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -13,10 +14,10 @@ const CREAM = "#fbf4dc";
 
 // Little milestone rewards — the "collectable" side of the page.
 const BADGES = [
-  { id: "first", label: "First Sip", icon: "🥤", need: 1 },
-  { id: "hydrated", label: "Hydrated", icon: "💧", need: 5 },
-  { id: "zot", label: "Zot Zot", icon: "🐜", need: 10 },
-  { id: "legend", label: "Campus Legend", icon: "🏆", need: 25 },
+  { id: "first", label: "First Sip ", need: 1 },
+  { id: "hydrated", label: "Hydrated ", need: 5 },
+  { id: "quench", label: "Quenched ", need: 10 },
+  { id: "poisoned", label: "Water Poisoned ", need: 25 },
 ];
 
 function formatDate(value) {
@@ -90,8 +91,10 @@ export default function CollectablesPage() {
       <SiteHeader />
 
       <main style={content}>
-        <h1 style={title}>Collectables 💧✨</h1>
-        <p style={subtitle}>Your hydration journey across UCI, one refill at a time.</p>
+        <h1 style={title}>
+          Collectables <WaterDrop height={34} style={{ marginLeft: 4 }} />
+        </h1>
+        <p style={subtitle}>Hydrate and Level up!</p>
 
         {!mounted ? null : !loggedIn ? (
           <div style={emptyCard}>
@@ -110,9 +113,9 @@ export default function CollectablesPage() {
           <>
             {/* Stat tiles */}
             <div style={statGrid}>
-              <Stat label="Total refills" value={totalVisits} icon="💧" />
-              <Stat label="Fountains collected" value={collected} icon="📍" />
-              <Stat label="Reviews written" value={commentsCount} icon="💬" />
+              <Stat label="Total refills" value={totalVisits} />
+              <Stat label="Fountains collected" value={collected} />
+              <Stat label="Reviews written" value={commentsCount} />
             </div>
 
             {/* Milestones */}
@@ -125,7 +128,7 @@ export default function CollectablesPage() {
                     key={badge.id}
                     style={{ ...badge, opacity: earned ? 1 : 0.4 }}
                   >
-                    <span style={{ fontSize: 26 }}>{badge.icon}</span>
+                    <WaterDrop height={26} />
                     <span style={{ fontWeight: 700, fontSize: 14 }}>
                       {badge.label}
                     </span>
@@ -187,10 +190,10 @@ export default function CollectablesPage() {
   );
 }
 
-function Stat({ label, value, icon }) {
+function Stat({ label, value }) {
   return (
     <div style={statCard}>
-      <span style={{ fontSize: 28 }}>{icon}</span>
+      <WaterDrop height={26} />
       <span style={statValue}>{value}</span>
       <span style={statLabel}>{label}</span>
     </div>

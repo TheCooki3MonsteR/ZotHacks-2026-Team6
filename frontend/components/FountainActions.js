@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { recordFountainVisit } from "../lib/clientApi";
+import WaterDrop from "./WaterDrop";
 
 // "I used this fountain" button (reviews live in FountainReviews).
 // `compact` renders just the button (used on the homepage cards).
@@ -30,7 +31,7 @@ export default function FountainActions({
     setTimes(res.times_visited);
     setUsed(true);
     setBusy(false);
-    setNote("Refill logged! 💧");
+    setNote("Refill logged!");
     onVisited?.(res.times_visited);
   }
 
@@ -43,7 +44,8 @@ export default function FountainActions({
           disabled={busy}
           style={compact ? compactBtn : used ? secondaryBtn : primaryBtn}
         >
-          {used ? "Used it again 💧" : "I used this fountain 💧"}
+          {used ? "Used it again" : "I used this fountain"}
+          <WaterDrop height={16} style={{ marginLeft: 6 }} />
         </button>
 
         {!compact && (
@@ -55,7 +57,11 @@ export default function FountainActions({
         )}
       </div>
 
-      {note && <p style={noteStyle}>{note}</p>}
+      {note && (
+        <p style={noteStyle}>
+          {note} <WaterDrop height={13} />
+        </p>
+      )}
     </div>
   );
 }
