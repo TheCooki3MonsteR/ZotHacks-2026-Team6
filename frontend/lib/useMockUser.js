@@ -7,15 +7,19 @@ import { getUser, clearUser } from "./auth";
 // Keeps multiple components (header, page) in sync about the mock session.
 const AUTH_EVENT = "zothydrate:auth";
 
+// The "logged in" demo identity. It maps to a seeded demo user so backend
+// writes (visits, comments) have a valid user to attach to.
+const DEMO_USERNAME = "anteater_anna";
+
 function readUser() {
   const stored = getUser();
-  if (stored) return stored;
+  if (stored) return { username: DEMO_USERNAME, ...stored };
   // Preview the logged-in design without real auth: /homepage?as=user
   if (
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("as") === "user"
   ) {
-    return { username: "Anteater" };
+    return { username: DEMO_USERNAME, displayName: "Anna Anteater" };
   }
   return null;
 }

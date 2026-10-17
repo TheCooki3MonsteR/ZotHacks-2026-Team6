@@ -18,6 +18,11 @@ export default function SiteHeader() {
         <Link href="/map" style={navLink}>
           Map
         </Link>
+        {loggedIn && (
+          <Link href="/collectables" style={navLink}>
+            Collectables
+          </Link>
+        )}
         {loggedIn ? (
           <button type="button" onClick={logout} style={navButton}>
             Log out
