@@ -1,0 +1,19 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+.next/
+out/
+.venv/
+__pycache__/
+*.pyc
+
+# Local databases and leftovers
+*.db
+*.db-journal
+.DS_Store
+supabase/
