@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMockUser } from "../../../lib/useMockUser";
 import SiteHeader from "../../../components/SiteHeader";
 import FountainMapLoader from "../../../components/FountainMapLoader";
+import FountainActions from "../../../components/FountainActions";
 
 const SERIF = 'Georgia, "Times New Roman", Cambria, serif';
 const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
@@ -14,7 +15,7 @@ const CREAM = "#fbf4dc";
 const STAR = "#f6c445";
 
 export default function Homepage() {
-  const { loggedIn } = useMockUser();
+  const { loggedIn, user } = useMockUser();
   const [fountains, setFountains] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -109,11 +110,20 @@ export default function Homepage() {
                     loading="lazy"
                     style={popularImage}
                   />
-                  <div style={quoteBubble}>
+                  <div style={{ ...quoteBubble, bottom: loggedIn ? 134 : 78 }}>
                     “{fountain.quote || fountain.description}”
                   </div>
                   <div style={popularFooter}>
                     <span style={popularName}>{fountain.name}</span>
+                    {loggedIn && (
+                      <div style={popularAction}>
+                        <FountainActions
+                          fountainId={fountain.fountain_id}
+                          username={user?.username}
+                          compact
+                        />
+                      </div>
+                    )}
                   </div>
                 </article>
               );
@@ -251,7 +261,12 @@ const popularFooter = {
   padding: "14px 18px",
   textAlign: "center",
   background: "#ffffff",
+  display: "grid",
+  gap: 10,
+  justifyItems: "center",
 };
+
+const popularAction = { display: "flex" };
 
 const popularName = { fontWeight: 600, fontSize: 17, color: "#23395d" };
 

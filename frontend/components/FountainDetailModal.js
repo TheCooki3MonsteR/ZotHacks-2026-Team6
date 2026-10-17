@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMockUser } from "../lib/useMockUser";
+import { localGetComments, localGetVisit } from "../lib/localStore";
+import FountainActions from "./FountainActions";
 
 const SERIF = 'Georgia, "Times New Roman", Cambria, serif';
 const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 const BLUE = "#1c4e9e";
+const POPUP_COMMENT_LIMIT = 4;
 
 function formatDate(value) {
   const d = new Date(value);
@@ -17,21 +21,38 @@ function formatDate(value) {
 }
 
 export default function FountainDetailModal({ fountainId, onClose }) {
-  const [data, setData] = useState(null);
+  const { user } = useMockUser();
+  const username = user?.username;
+
+  const [payload, setPayload] = useState(null);
   const [status, setStatus] = useState("loading");
 
-  // Load the detail from the per-fountain API whenever the selection changes.
+  // Load detail from the per-fountain API whenever the selection changes.
   useEffect(() => {
     if (!fountainId) return;
     let active = true;
     setStatus("loading");
-    setData(null);
+    setPayload(null);
 
     fetch(`/api/fountains/${fountainId}`)
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error("not found"))))
       .then((json) => {
         if (!active) return;
-        setData(json);
+
+        // Visits and comments are stored in the browser for now (no backend
+        // yet), so merge them with the bundled demo comments.
+        const localComments = username
+          ? localGetComments(username, fountainId)
+          : [];
+        const comments = [...localComments, ...(json.comments ?? [])]
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, POPUP_COMMENT_LIMIT);
+
+        const times = username
+          ? (localGetVisit(username, fountainId)?.times_visited ?? 0)
+          : 0;
+
+        setPayload({ fountain: json.fountain, comments, times });
         setStatus("ready");
       })
       .catch(() => {
@@ -41,7 +62,7 @@ export default function FountainDetailModal({ fountainId, onClose }) {
     return () => {
       active = false;
     };
-  }, [fountainId]);
+  }, [fountainId, username]);
 
   // Close on Escape.
   useEffect(() => {
@@ -54,8 +75,8 @@ export default function FountainDetailModal({ fountainId, onClose }) {
 
   if (!fountainId) return null;
 
-  const fountain = data?.fountain;
-  const comments = data?.comments ?? [];
+  const fountain = payload?.fountain;
+  const comments = payload?.comments ?? [];
 
   return (
     <div style={backdrop} onClick={onClose}>
@@ -126,6 +147,29 @@ export default function FountainDetailModal({ fountainId, onClose }) {
                 ))}
               </ul>
             )}
+
+            {/* Log a refill + leave a comment */}
+            <FountainActions
+              fountainId={fountainId}
+              username={username}
+              initialTimesVisited={payload?.times ?? 0}
+              onVisited={(times) =>
+                setPayload((p) => (p ? { ...p, times } : p))
+              }
+              onComment={(comment) =>
+                setPayload((p) =>
+                  p
+                    ? {
+                        ...p,
+                        comments: [comment, ...p.comments].slice(
+                          0,
+                          POPUP_COMMENT_LIMIT,
+                        ),
+                      }
+                    : p,
+                )
+              }
+            />
           </>
         )}
       </div>
