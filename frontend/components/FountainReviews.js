@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { addReview, deleteReview, listReviews } from "../lib/reviews";
 import { stickerSrc } from "../lib/collection";
+import { useIsMobile } from "../lib/useIsMobile";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
-const BLUE = "#1c4e9e";
+const BLUE = "#4D80AA";
 
 function formatDate(value) {
   const d = new Date(value);
@@ -34,6 +35,7 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [reward, setReward] = useState(null); // what the last review unlocked
+  const isMobile = useIsMobile();
 
   const load = useCallback(async () => {
     try {
@@ -92,7 +94,7 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
 
   return (
     <section>
-      <h3 style={heading}>Reviews</h3>
+      <h3 style={isMobile ? headingMobile : heading}>Reviews</h3>
 
       {reward && (
         <div style={rewardBox} role="status">
@@ -137,8 +139,8 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
         ) : (
           <ul style={list}>
             {reviews.map((r) => (
-              <li key={r.review_id} style={item}>
-                <div style={meta}>
+              <li key={r.review_id} style={isMobile ? itemMobile : item}>
+                <div style={isMobile ? metaMobile : meta}>
                   <span>
                     <strong style={{ color: BLUE }}>{r.username}</strong>{" "}
                     {r.rating != null && <Stars value={r.rating} />}
@@ -177,7 +179,10 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
                   aria-checked={stars === n}
                   aria-label={`${n} star${n === 1 ? "" : "s"}`}
                   onClick={() => setStars(n)}
-                  style={{ ...starBtn, color: n <= stars ? "#f6c445" : "#d7e2ea" }}
+                  style={{
+                    ...(isMobile ? starBtnMobile : starBtn),
+                    color: n <= stars ? "#f6c445" : "#d7e2ea",
+                  }}
                 >
                   ★
                 </button>
@@ -311,3 +316,9 @@ const rarityPill = {
 };
 const rewardNote = { fontSize: 13, color: "#6b5d1e" };
 const errorStyle = { fontSize: 13, color: "#c0392b", margin: "8px 0 0" };
+
+// ---- Mobile layout ----------------------------------------------------------
+const headingMobile = { ...heading, fontSize: 18 };
+const itemMobile = { ...item, padding: "10px 12px" };
+const metaMobile = { ...meta, flexWrap: "wrap", rowGap: 4 };
+const starBtnMobile = { ...starBtn, fontSize: 34 };

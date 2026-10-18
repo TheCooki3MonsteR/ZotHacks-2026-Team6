@@ -7,17 +7,19 @@ import SiteHeader from "../../../components/SiteHeader";
 import FountainMapLoader from "../../../components/FountainMapLoader";
 import FountainActions from "../../../components/FountainActions";
 import WaterDrop from "../../../components/WaterDrop";
+import { useIsMobile } from "../../../lib/useIsMobile";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 
-const BLUE = "#1c4e9e";
+const BLUE = "#4D80AA";
 const CREAM = "#fbf4dc";
 const STAR = "#f6c445";
 const POPULAR_COUNT = 6;
 
 export default function Homepage() {
   const { loggedIn, user } = useMockUser();
+  const isMobile = useIsMobile();
   const [fountains, setFountains] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,16 +80,27 @@ export default function Homepage() {
     <div style={page}>
       <SiteHeader />
 
-      <main style={content}>
-        <h1 style={pageTitle}>Water Fountains - Near You</h1>
+      <main style={isMobile ? contentMobile : content}>
+        <h1 style={isMobile ? pageTitleMobile : pageTitle}>Water Fountains - Near You</h1>
 
         {/* Cards */}
-        <div style={loggedIn ? cardsLoggedIn : cardsLoggedOut}>
+        <div
+          style={
+            isMobile
+              ? cardsMobile
+              : loggedIn
+                ? cardsLoggedIn
+                : cardsLoggedOut
+          }
+        >
           {/* Map card — live map of every fountain */}
           <div style={loggedIn ? { ...card, ...mapCardActive } : card}>
-            <FountainMapLoader height={loggedIn ? 300 : 360} zoom={15} />
-            <div style={cardFooter}>
-              <h2 style={cardTitle}>
+            <FountainMapLoader
+              height={isMobile ? 220 : loggedIn ? 300 : 360}
+              zoom={15}
+            />
+            <div style={isMobile ? cardFooterMobile : cardFooter}>
+              <h2 style={isMobile ? cardTitleMobile : cardTitle}>
                 Water Fountains{" "}
                 <WaterDrop height={26} style={{ marginLeft: 2 }} />
               </h2>
@@ -104,10 +117,14 @@ export default function Homepage() {
               <img
                 src="/images/collectables.png"
                 alt="Anteater mascot holding a glass of water"
-                style={{ ...cardImageShort, objectFit: "contain", background: "#f3ecd4" }}
+                style={{
+                  ...(isMobile ? cardImageShortMobile : cardImageShort),
+                  objectFit: "contain",
+                  background: "#f3ecd4",
+                }}
               />
-              <div style={cardFooter}>
-                <h2 style={cardTitle}>
+              <div style={isMobile ? cardFooterMobile : cardFooter}>
+                <h2 style={isMobile ? cardTitleMobile : cardTitle}>
                   Collectables{" "}
                   <WaterDrop height={26} style={{ marginLeft: 2 }} />
                 </h2>
@@ -118,8 +135,8 @@ export default function Homepage() {
         </div>
 
         {/* Popular */}
-        <h2 style={popularHeading}>
-          <span style={star} aria-hidden="true">
+        <h2 style={isMobile ? popularHeadingMobile : popularHeading}>
+          <span style={isMobile ? starMobile : star} aria-hidden="true">
             ★
           </span>
           Popular
@@ -130,7 +147,7 @@ export default function Homepage() {
         ) : fountains.length === 0 ? (
           <p style={muted}>No fountains to show yet.</p>
         ) : (
-          <div style={popularGrid}>
+          <div style={isMobile ? popularGridMobile : popularGrid}>
             {fountains.map((fountain) => {
               const hasCoords =
                 Number.isFinite(fountain.latitude) &&
@@ -150,13 +167,25 @@ export default function Homepage() {
                     src={imageSrc}
                     alt={`Map pin at ${fountain.name}`}
                     loading="lazy"
-                    style={popularImage}
+                    style={isMobile ? popularImageMobile : popularImage}
                   />
-                  <div style={{ ...quoteBubble, bottom: loggedIn ? 134 : 78 }}>
+                  <div
+                    style={{
+                      ...quoteBubble,
+                      ...(isMobile ? quoteBubbleMobile : null),
+                      bottom: isMobile
+                        ? loggedIn
+                          ? 122
+                          : 72
+                        : loggedIn
+                          ? 134
+                          : 78,
+                    }}
+                  >
                     “{fountain.quote || fountain.description}”
                   </div>
                   <div style={popularFooter}>
-                    <span style={popularName}>{fountain.name}</span>
+                    <span style={isMobile ? popularNameMobile : popularName}>{fountain.name}</span>
                     {loggedIn && (
                       <div style={popularAction}>
                         <FountainActions
@@ -261,7 +290,7 @@ const muted = { color: "#23395d", opacity: 0.8, fontSize: 16 };
 
 const popularGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(380px, 100%), 1fr))",
   gap: 28,
 };
 
@@ -317,3 +346,42 @@ const attribution = {
   fontSize: 12,
   color: "#8a97a3",
 };
+
+// ---- Mobile layout ----------------------------------------------------------
+const contentMobile = { padding: "18px 16px 48px" };
+
+const pageTitleMobile = { ...pageTitle, fontSize: 30, margin: "4px 0 18px" };
+
+const cardsMobile = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: 18,
+  alignItems: "stretch",
+};
+
+const cardImageShortMobile = { ...cardImageShort, height: 220 };
+
+const cardFooterMobile = { ...cardFooter, padding: "14px 18px 18px" };
+
+const cardTitleMobile = { ...cardTitle, fontSize: 24 };
+
+const popularHeadingMobile = {
+  ...popularHeading,
+  fontSize: 30,
+  gap: 10,
+  margin: "32px 0 16px",
+};
+
+const starMobile = { ...star, fontSize: 28 };
+
+const popularGridMobile = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: 18,
+};
+
+const popularImageMobile = { ...popularImage, height: 180 };
+
+const quoteBubbleMobile = { left: 14, right: 14, fontSize: 14 };
+
+const popularNameMobile = { ...popularName, fontSize: 16 };

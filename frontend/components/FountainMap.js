@@ -155,7 +155,7 @@ const overlay = {
   display: "grid",
   placeItems: "center",
   background: "rgba(231, 241, 251, 0.85)",
-  color: "#1c4e9e",
+  color: "#4D80AA",
   fontSize: 14,
   fontFamily: "Epilogue, -apple-system, Roboto, Helvetica, sans-serif",
   zIndex: 500,
