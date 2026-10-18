@@ -1,6 +1,6 @@
 "use client";
 
-import { LegendaryStyle, isLegendary } from "../../../components/legendaryFx";
+import { LegendaryStyle, isLegendary, isEpic, isRare } from "../../../components/legendaryFx";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMockUser } from "../../../lib/useMockUser";
@@ -23,6 +23,8 @@ const BADGES = [
   { id: "quench", label: "Quenched", need: 10, image: "/GoldPetr.png" },
   { id: "poisoned", label: "Water Poisoned", need: 25, image: "/GalaxyPetr.png" },
 ];
+
+const RARITY_ORDER = { legendary: 0, epic: 1, rare: 2, common: 3 };
 
 function formatDate(value) {
   if (!value) return "—";
@@ -116,6 +118,14 @@ export default function ProfilePage() {
     });
   }
 
+  // Stickers sorted rarest first: legendary, epic, rare, common (then A-Z within each group).
+  const sortedStickers = useMemo(() => {
+    const rank = (s) => RARITY_ORDER[String(s.rarity ?? "").toLowerCase()] ?? RARITY_ORDER.common + 1;
+    return [...(stats?.stickers?.owned ?? [])].sort(
+      (a, b) => rank(a) - rank(b) || String(a.name).localeCompare(String(b.name)),
+    );
+  }, [stats]);
+
   const totalVisits = stats?.total_visits ?? 0;
   const collected = stats?.fountains_visited ?? 0;
   const commentsCount = stats?.comments_count ?? 0;
@@ -181,7 +191,7 @@ export default function ProfilePage() {
 
             {/* Stickers unlocked by posting reviews */}
             <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>
-              Your stickers
+              Stickers
               {stats?.stickers?.total > 0 &&
                 ` (${stats.stickers.owned.length}/${stats.stickers.total})`}
             </h2>
@@ -192,11 +202,11 @@ export default function ProfilePage() {
             ) : (
               <div style={stickerGrid}>
                 <LegendaryStyle />
-                {stats.stickers.owned.map((s) => (
+                {sortedStickers.map((s) => (
                   <div
                     key={s.collectible_id}
                     style={stickerCard}
-                    className={isLegendary(s) ? "legendary-fx" : undefined}
+                    className={isLegendary(s) ? "legendary-fx" : isEpic(s) ? "epic-fx" : isRare(s) ? "rare-fx" : undefined}
                   >
                     <img
                       src={stickerSrc(s.image_path)}
@@ -205,7 +215,7 @@ export default function ProfilePage() {
                     />
                     <span style={{ fontWeight: 700, fontSize: 14, position: "relative", zIndex: 1 }}>{s.name}</span>
                     {s.rarity && (
-                      <span style={{ fontSize: 12, color: isLegendary(s) ? "#f3e8ff" : "#6b7b8a", textTransform: "capitalize", position: "relative", zIndex: 1 }}>
+                      <span style={{ fontSize: 12, color: isLegendary(s) ? "#f3e8ff" : isEpic(s) ? "#7a5200" : isRare(s) ? "#ffe4e6" : "#6b7b8a", textTransform: "capitalize", position: "relative", zIndex: 1 }}>
                         {s.rarity}
                       </span>
                     )}
@@ -214,8 +224,39 @@ export default function ProfilePage() {
               </div>
             )}
 
+            {/* Fountains the user has reviewed */}
+            <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>
+              Reviewed ({reviewed.length})
+            </h2>
+
+            {reviewed.length === 0 ? (
+              <div style={isMobile ? emptyCardMobile : emptyCard}>
+                <p style={{ margin: 0, fontSize: 16 }}>
+                  You haven&apos;t reviewed any fountains yet.
+                </p>
+                <p style={{ margin: "6px 0 0", color: "#6b7b8a", fontSize: 14 }}>
+                  Open a fountain and post a review to see it here.
+                </p>
+                <Link href="/homepage" style={cta}>
+                  Find a fountain
+                </Link>
+              </div>
+            ) : (
+              <div style={isMobile ? visitGridMobile : visitGrid}>
+                {reviewed.map((r) => (
+                  <ReviewCard
+                    key={r.review_id}
+                    r={r}
+                    mobile={isMobile}
+                    onSaved={handleReviewSaved}
+                    onDeleted={handleReviewDeleted}
+                  />
+                ))}
+              </div>
+            )}
+
             {/* Per-fountain breakdown */}
-            <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>Your fountains</h2>
+            <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>Fountains</h2>
 
             {visits.length === 0 ? (
               <div style={isMobile ? emptyCardMobile : emptyCard}>
@@ -254,38 +295,6 @@ export default function ProfilePage() {
                       </a>
                     )}
                   </article>
-                ))}
-              </div>
-            )}
-
-            {/* Fountains the user has reviewed */}
-            <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>
-              Fountains you&apos;ve reviewed
-              {reviewed.length > 0 && ` (${reviewed.length})`}
-            </h2>
-
-            {reviewed.length === 0 ? (
-              <div style={isMobile ? emptyCardMobile : emptyCard}>
-                <p style={{ margin: 0, fontSize: 16 }}>
-                  You haven&apos;t reviewed any fountains yet.
-                </p>
-                <p style={{ margin: "6px 0 0", color: "#6b7b8a", fontSize: 14 }}>
-                  Open a fountain and post a review to see it here.
-                </p>
-                <Link href="/homepage" style={cta}>
-                  Find a fountain
-                </Link>
-              </div>
-            ) : (
-              <div style={isMobile ? visitGridMobile : visitGrid}>
-                {reviewed.map((r) => (
-                  <ReviewCard
-                    key={r.review_id}
-                    r={r}
-                    mobile={isMobile}
-                    onSaved={handleReviewSaved}
-                    onDeleted={handleReviewDeleted}
-                  />
                 ))}
               </div>
             )}

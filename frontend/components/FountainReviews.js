@@ -1,6 +1,6 @@
 "use client";
 
-import { LegendaryStyle, isLegendary } from "./legendaryFx";
+import { LegendaryStyle, isLegendary, isEpic, isRare } from "./legendaryFx";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { addReview, deleteReview, listReviews, updateReview } from "../lib/reviews";
@@ -139,10 +139,10 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
             reward.stickers.map((s) => (
               <div
                 key={s.collectible_id}
-                style={isLegendary(s) ? { ...rewardRow, ...legendRow } : rewardRow}
-                className={isLegendary(s) ? "legendary-fx" : undefined}
+                style={isLegendary(s) || isEpic(s) || isRare(s) ? { ...rewardRow, ...legendRow } : rewardRow}
+                className={isLegendary(s) ? "legendary-fx" : isEpic(s) ? "epic-fx" : isRare(s) ? "rare-fx" : undefined}
               >
-                {isLegendary(s) && <LegendaryStyle />}
+                {(isLegendary(s) || isEpic(s) || isRare(s)) && <LegendaryStyle />}
                 <img
                   src={stickerSrc(s.image_path)}
                   alt={s.name}
@@ -152,8 +152,8 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
                   }}
                 />
                 <div>
-                  <strong style={{ color: isLegendary(s) ? "#ffffff" : BLUE, position: "relative", zIndex: 1 }}>
-                    {isLegendary(s) ? "Legendary sticker unlocked!" : "Sticker unlocked!"}
+                  <strong style={{ color: isLegendary(s) || isRare(s) ? "#ffffff" : isEpic(s) ? "#4a3000" : BLUE, position: "relative", zIndex: 1 }}>
+                    {isLegendary(s) ? "Legendary sticker unlocked!" : isEpic(s) ? "Epic sticker unlocked!" : isRare(s) ? "Rare sticker unlocked!" : "Sticker unlocked!"}
                   </strong>
                   <div style={{ fontSize: 15, fontWeight: 700 }}>{s.name}</div>
                   {s.rarity && (
@@ -399,9 +399,9 @@ const loginBtn = {
 };
 const RARITY = {
   common: { background: "#e7eef5", color: "#4a5b6b" },
-  rare: { background: "#d6e6fa", color: "#1c4e9e" },
-  epic: { background: "#e8dcf8", color: "#6a3fa8" },
-  legendary: { background: "#fde7a8", color: "#8a5a00" },
+  rare: { background: "#fde2e2", color: "#b91c1c" },
+  epic: { background: "#fde7a8", color: "#8a5a00" },
+  legendary: { background: "#e8dcf8", color: "#6a3fa8" },
 };
 const rewardBox = {
   background: "#fff9e3",
