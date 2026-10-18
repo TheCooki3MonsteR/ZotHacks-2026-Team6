@@ -11,7 +11,7 @@ Built at **ZotHacks 2026** by Team 6: Mentor Mason Drake · Daniel Canon · Joan
 - **Live campus map** – every fountain is a pin, colored from light to dark blue by its average star rating. Hover a pin for its name and rating, click it for details.
 - **See where's popular** – the highest-rated fountains, with their stars, a short blurb, and a one-tap refill button.
 - **Reviews and ratings** – leave 1–5 stars and a written review (one per fountain). Edit or delete yours anywhere it shows up: the fountain pop-up or your profile.
-- **Refill tracking** – tap "I used this fountain" to log a refill (3-minute cooldown per fountain). Posting a review counts as a refill too.
+- **Refill tracking** – tap "I used this fountain" to log a refill. Posting a review counts as a refill too.
 - **Collectibles** – reviewing a fountain unlocks its Petr sticker. Stickers come in four rarities: common, rare (shiny red), epic (sparkly gold) and legendary (purple).
 - **Milestones** – First Sip (1 refill), Hydrated (5), Quenched (10) and Water Poisoned (25).
 - **Profile** – your stats, milestones, stickers (rarest first), the fountains you've reviewed, and the fountains you use most.
