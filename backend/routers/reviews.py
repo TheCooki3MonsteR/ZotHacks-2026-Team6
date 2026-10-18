@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, exists, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -40,7 +40,7 @@ def list_reviews(fountain_id: int, request: Request, session: Session = Depends(
     ).all()
 
     me = request.session.get("user_id")  # None if nobody is logged in
-    return [
+    items = [
         {
             "review_id": review.review_id,
             "username": username,
@@ -51,6 +51,32 @@ def list_reviews(fountain_id: int, request: Request, session: Session = Depends(
         }
         for review, username, stars in rows
     ]
+
+    # Star-only ratings (no written review): still show who rated it and how many stars.
+    star_only = session.execute(
+        select(Rating, User.username)
+        .join(User, User.user_id == Rating.user_id)
+        .where(
+            Rating.fountain_id == fountain_id,
+            ~exists().where(
+                Review.user_id == Rating.user_id, Review.fountain_id == Rating.fountain_id
+            ),
+        )
+    ).all()
+    items += [
+        {
+            "review_id": None,  # no written review behind this one
+            "username": username,
+            "rating": float(rating.rating),
+            "body": "",
+            "created_at": rating.rated_at,
+            "is_mine": rating.user_id == me,
+        }
+        for rating, username in star_only
+    ]
+
+    items.sort(key=lambda i: i["created_at"], reverse=True)  # newest first, text or not
+    return items
 
 
 # ---------- logged-in users only ----------
