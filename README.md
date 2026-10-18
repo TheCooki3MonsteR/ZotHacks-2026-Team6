@@ -4,7 +4,7 @@
 
 Zot Water is an interactive map of the bottle-filling stations and water fountains on the UCI campus. Log a refill, review a fountain, and collect Petr stickers as you hydrate your way around Aldrich Park and beyond.
 
-Built at **ZotHacks 2026** by Team 6: Mason Drake · Daniel Canon · Joanne Huang · Emily Luo · Jason Nguyen
+Built at **ZotHacks 2026** by Team 6: Mentor Mason Drake · Daniel Canon · Joanne Huang · Emily Luo · Jason Nguyen
 
 ## Features
 
