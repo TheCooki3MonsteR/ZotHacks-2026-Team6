@@ -5,27 +5,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { addReview, deleteReview, listReviews, updateReview } from "../lib/reviews";
 import { stickerSrc } from "../lib/collection";
+import { formatDate } from "../lib/format";
+import { Stars, StarPicker } from "./Stars";
 import { useIsMobile } from "../lib/useIsMobile";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const BLUE = "#4D80AA";
-
-function formatDate(value) {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
-
-function Stars({ value }) {
-  const n = Math.round(Number(value) || 0);
-  return (
-    <span aria-label={`${n} out of 5 stars`} style={{ color: "#f6c445", letterSpacing: 1 }}>
-      {"★".repeat(n)}
-      <span style={{ color: "#d7e2ea" }}>{"★".repeat(5 - n)}</span>
-    </span>
-  );
-}
 
 // Reviews for one fountain: list + (for logged-in users) a stars-and-text form.
 export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
@@ -187,30 +173,13 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
                 <div style={isMobile ? metaMobile : meta}>
                   <span>
                     <strong style={{ color: BLUE }}>{r.username}</strong>{" "}
-                    {r.rating != null && <Stars value={r.rating} />}
+                    {r.rating != null && <Stars value={r.rating} size={14} />}
                   </span>
                   <span style={date}>{formatDate(r.created_at)}</span>
                 </div>
                 {r.is_mine && r.review_id != null && editingId === r.review_id ? (
                   <form onSubmit={handleSaveEdit} style={form}>
-                    <div role="radiogroup" aria-label="Star rating" style={starRow}>
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <button
-                          key={n}
-                          type="button"
-                          role="radio"
-                          aria-checked={editStars === n}
-                          aria-label={`${n} star${n === 1 ? "" : "s"}`}
-                          onClick={() => setEditStars(n)}
-                          style={{
-                            ...(isMobile ? starBtnMobile : starBtn),
-                            color: n <= editStars ? "#f6c445" : "#d7e2ea",
-                          }}
-                        >
-                          ★
-                        </button>
-                      ))}
-                    </div>
+                    <StarPicker value={editStars} onChange={setEditStars} size={isMobile ? 34 : 28} />
                     <textarea
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
@@ -269,24 +238,7 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
       ) : mine ? null : (
         status === "ready" && (
           <form onSubmit={handleSubmit} style={form}>
-            <div role="radiogroup" aria-label="Star rating" style={starRow}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  role="radio"
-                  aria-checked={stars === n}
-                  aria-label={`${n} star${n === 1 ? "" : "s"}`}
-                  onClick={() => setStars(n)}
-                  style={{
-                    ...(isMobile ? starBtnMobile : starBtn),
-                    color: n <= stars ? "#f6c445" : "#d7e2ea",
-                  }}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
+            <StarPicker value={stars} onChange={setStars} size={isMobile ? 34 : 28} />
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -352,15 +304,6 @@ const deleteBtn = {
   fontFamily: SANS,
 };
 const form = { display: "grid", gap: 8, marginTop: 14 };
-const starRow = { display: "flex", gap: 2 };
-const starBtn = {
-  background: "none",
-  border: "none",
-  padding: 0,
-  fontSize: 28,
-  lineHeight: 1,
-  cursor: "pointer",
-};
 const textarea = {
   width: "100%",
   boxSizing: "border-box",
@@ -432,4 +375,3 @@ const headingMobile = { ...heading, fontSize: 18 };
 const listMobile = { ...list, maxHeight: 240 };
 const itemMobile = { ...item, padding: "10px 12px" };
 const metaMobile = { ...meta, flexWrap: "wrap", rowGap: 4 };
-const starBtnMobile = { ...starBtn, fontSize: 34 };

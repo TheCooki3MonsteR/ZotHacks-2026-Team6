@@ -2,9 +2,7 @@ import os
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-import psycopg
 from dotenv import load_dotenv
-from psycopg.rows import dict_row
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -26,9 +24,6 @@ if not _RAW_URL:
     raise RuntimeError(
         "ZOTWATER_POSTGRES_URL is not set. Check that backend/.env exists and has that line."
     )
-
-# Plain connection string, used by get_db() (raw SQL).
-DATABASE_URL = _clean_url(_RAW_URL, "postgresql")
 
 # ORM engine: "postgresql+psycopg" means "Postgres, using the psycopg driver".
 # prepare_threshold=None is needed for Supabase's pooled connections.

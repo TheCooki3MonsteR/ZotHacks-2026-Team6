@@ -5,8 +5,9 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from db import get_session
-from models import User, UserVisited, WaterFountain
+from models import User, UserVisited
 from routers.auth import get_current_user
+from routers.ratings import require_fountain
 
 COOLDOWN = timedelta(minutes=3)  # same user + same fountain: one refill per 3 minutes
 
@@ -24,8 +25,7 @@ def record_visit(
     First time: creates the row with times_visited = 1.
     Every time after: adds 1 and updates last_visited.
     """
-    if session.get(WaterFountain, fountain_id) is None:
-        raise HTTPException(404, "Fountain not found.")
+    require_fountain(session, fountain_id)
 
     visit = session.get(UserVisited, (user.user_id, fountain_id))
     if visit is None:

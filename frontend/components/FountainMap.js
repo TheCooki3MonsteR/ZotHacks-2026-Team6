@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import FountainDetailModal from "./FountainDetailModal";
@@ -72,6 +72,7 @@ function getPinIcon(rating) {
         iconSize: [28, 38],
         iconAnchor: [14, 38],
         popupAnchor: [0, -34],
+        tooltipAnchor: [0, -34], // hover label sits just above the pin's head
       }),
     );
   }
@@ -154,7 +155,16 @@ export default function FountainMap({
             eventHandlers={{
               click: () => setSelectedId(fountain.fountain_id),
             }}
-          />
+          >
+            {/* Hovering a pin shows just the name and rating. */}
+            <Tooltip direction="top">
+              <strong>{fountain.name}</strong>
+              <br />
+              {fountain.rating_count > 0
+                ? `★ ${Number(fountain.avg_rating).toFixed(1)} (${fountain.rating_count})`
+                : "No ratings yet"}
+            </Tooltip>
+          </Marker>
         ))}
       </MapContainer>
 

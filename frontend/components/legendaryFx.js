@@ -2,7 +2,7 @@
 // Put className="legendary-fx" on a container and render <LegendaryStyle /> once on the page.
 // (the container needs position: relative + overflow: hidden, the class adds both)
 
-export const LEGENDARY_CSS = `
+const LEGENDARY_CSS = `
 .legendary-fx {
   position: relative;
   overflow: hidden;
@@ -53,7 +53,7 @@ export const LEGENDARY_CSS = `
 
 // Sparkly golden background + effects for EPIC stickers (same recipe as legendary, in gold).
 // Put className="epic-fx" on a container; <LegendaryStyle /> below also supplies this CSS.
-export const EPIC_CSS = `
+const EPIC_CSS = `
 .epic-fx {
   position: relative;
   overflow: hidden;
@@ -103,7 +103,7 @@ export const EPIC_CSS = `
 
 // Shiny red background + gloss sweep for RARE stickers (no sparkle dots, so it reads differently from epic).
 // Put className="rare-fx" on a container; <LegendaryStyle /> below also supplies this CSS.
-export const RARE_CSS = `
+const RARE_CSS = `
 .rare-fx {
   position: relative;
   overflow: hidden;
