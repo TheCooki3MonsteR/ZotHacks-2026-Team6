@@ -69,7 +69,3 @@ export async function listMyReviews() {
     return [];
   }
 }
-
-export async function countMyReviews() {
-  return (await listMyReviews()).length;
-}

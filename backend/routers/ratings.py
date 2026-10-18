@@ -18,6 +18,16 @@ def require_fountain(session: Session, fountain_id: int) -> None:
         raise HTTPException(404, "Fountain not found.")
 
 
+def save_rating(session: Session, user_id: int, fountain_id: int, stars: int) -> None:
+    """Add this person's star rating, or change the one they already gave. The caller commits."""
+    row = session.get(Rating, (user_id, fountain_id))
+    if row is None:
+        session.add(Rating(user_id=user_id, fountain_id=fountain_id, rating=stars))
+    else:
+        row.rating = stars
+        row.rated_at = func.now()
+
+
 # ---------- anyone can see the average ----------
 
 @router.get("/rating")
@@ -55,12 +65,7 @@ def set_my_rating(
     """Give a rating, or change the one you already gave (one per person per fountain)."""
     require_fountain(session, fountain_id)
 
-    row = session.get(Rating, (user.user_id, fountain_id))
-    if row is None:
-        session.add(Rating(user_id=user.user_id, fountain_id=fountain_id, rating=body.rating))
-    else:
-        row.rating = body.rating
-        row.rated_at = func.now()
+    save_rating(session, user.user_id, fountain_id, body.rating)
     session.commit()
 
     return {"fountain_id": fountain_id, "my_rating": body.rating}

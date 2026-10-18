@@ -70,7 +70,9 @@ export default function FountainActions({
           disabled={busy}
           style={
             compact
-              ? compactBtn
+              ? used
+                ? compactBtnUsed
+                : compactBtn
               : used
                 ? isMobile
                   ? secondaryBtnMobile
@@ -80,7 +82,7 @@ export default function FountainActions({
                   : primaryBtn
           }
         >
-          {compact ? "Drank From" : used ? "Used it again" : "I used this fountain"}
+          {used ? "Used it again" : "I used this fountain"}
           <WaterDrop height={16} style={{ marginLeft: 6 }} />
         </button>
 
@@ -145,6 +147,9 @@ const compactBtn = {
   padding: "8px 14px",
   fontSize: 13,
 };
+
+// After you've used the fountain, the small card button turns light blue (like the pop-up's).
+const compactBtnUsed = { ...compactBtn, background: "#e7f1fb", color: "#4D80AA" };
 
 const count = { fontSize: 13, color: "#6b7b8a" };
 

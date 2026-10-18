@@ -5,9 +5,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from db import get_session
-from models import Collectible, Rating, Review, User, UserCollectible, UserVisited, WaterFountain
+from models import Collectible, Rating, Review, User, UserCollectible, UserVisited
 from routers.auth import get_current_user
 from routers.collection import sticker_json
+from routers.ratings import require_fountain, save_rating
 
 router = APIRouter(prefix="/api", tags=["reviews"])
 
@@ -19,13 +20,20 @@ class ReviewIn(BaseModel):
     body: str = Field(min_length=1, max_length=1000)  # the text
 
 
+def get_my_review(session: Session, user: User, review_id: int) -> Review:
+    """One of YOUR reviews. Someone else's review gets the same answer as one that doesn't exist."""
+    review = session.get(Review, review_id)
+    if review is None or review.user_id != user.user_id:
+        raise HTTPException(404, "Review not found, or it isn't yours.")
+    return review
+
+
 # ---------- anyone can read ----------
 
 @router.get("/fountains/{fountain_id}/reviews")
 def list_reviews(fountain_id: int, request: Request, session: Session = Depends(get_session)):
     """All reviews for one fountain, newest first, each with the author's stars."""
-    if session.get(WaterFountain, fountain_id) is None:
-        raise HTTPException(404, "Fountain not found.")
+    require_fountain(session, fountain_id)
 
     rows = session.execute(
         select(Review, User.username, Rating.rating)
@@ -93,8 +101,7 @@ def add_review(
     Posting a review also (a) counts as one more visit to this fountain and
     (b) unlocks this fountain's sticker(s) if the user doesn't have them yet.
     """
-    if session.get(WaterFountain, fountain_id) is None:
-        raise HTTPException(404, "Fountain not found.")
+    require_fountain(session, fountain_id)
 
     text = body.body.strip()
     if not text:
@@ -108,13 +115,8 @@ def add_review(
     if already is not None:
         raise HTTPException(409, ALREADY_REVIEWED)
 
-    # 1) the stars: add or update this person's row in ratings (same idea as set_my_rating)
-    rating_row = session.get(Rating, (user.user_id, fountain_id))
-    if rating_row is None:
-        session.add(Rating(user_id=user.user_id, fountain_id=fountain_id, rating=body.rating))
-    else:
-        rating_row.rating = body.rating
-        rating_row.rated_at = func.now()
+    # 1) the stars: add or update this person's row in ratings
+    save_rating(session, user.user_id, fountain_id, body.rating)
 
     # 2) the text
     review = Review(user_id=user.user_id, fountain_id=fountain_id, body=text)
@@ -178,10 +180,7 @@ def delete_my_review(
     session: Session = Depends(get_session),
 ):
     """Delete one of YOUR reviews, and your stars for that fountain with it."""
-    review = session.get(Review, review_id)
-    # Someone else's review gets the same answer as one that doesn't exist.
-    if review is None or review.user_id != user.user_id:
-        raise HTTPException(404, "Review not found, or it isn't yours.")
+    review = get_my_review(session, user, review_id)
 
     rating_row = session.get(Rating, (user.user_id, review.fountain_id))
     if rating_row is not None:
@@ -199,22 +198,14 @@ def update_my_review(
     session: Session = Depends(get_session),
 ):
     """Edit one of YOUR reviews: the new text and the new stars are saved together."""
-    review = session.get(Review, review_id)
-    # Someone else's review gets the same answer as one that doesn't exist.
-    if review is None or review.user_id != user.user_id:
-        raise HTTPException(404, "Review not found, or it isn't yours.")
+    review = get_my_review(session, user, review_id)
 
     text = body.body.strip()
     if not text:
         raise HTTPException(400, "Review can't be blank.")
 
     review.body = text
-    rating_row = session.get(Rating, (user.user_id, review.fountain_id))
-    if rating_row is None:
-        session.add(Rating(user_id=user.user_id, fountain_id=review.fountain_id, rating=body.rating))
-    else:
-        rating_row.rating = body.rating
-        rating_row.rated_at = func.now()
+    save_rating(session, user.user_id, review.fountain_id, body.rating)
     session.commit()  # text and stars change together
     session.refresh(review)
 

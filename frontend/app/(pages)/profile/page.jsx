@@ -7,6 +7,8 @@ import { useMockUser } from "../../../lib/useMockUser";
 import { loadStats } from "../../../lib/clientApi";
 import { deleteReview, updateReview } from "../../../lib/reviews";
 import { stickerSrc } from "../../../lib/collection";
+import { formatDate } from "../../../lib/format";
+import { StarPicker } from "../../../components/Stars";
 import SiteHeader from "../../../components/SiteHeader";
 import WaterDrop from "../../../components/WaterDrop";
 import { useIsMobile } from "../../../lib/useIsMobile";
@@ -25,17 +27,6 @@ const BADGES = [
 ];
 
 const RARITY_ORDER = { legendary: 0, epic: 1, rare: 2, common: 3 };
-
-function formatDate(value) {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 export default function ProfilePage() {
   const { user, loggedIn } = useMockUser();
@@ -74,27 +65,35 @@ export default function ProfilePage() {
     };
   }, [username]);
 
-  // Fill in names/coords for local (offline) visit records.
+  const fountainById = useMemo(() => new Map(fountains.map((f) => [f.fountain_id, f])), [fountains]);
+
+  // Fill in names/coords for local (offline) visit records, most-used fountain first
+  // (ties: used most recently first, then A-Z).
   const visits = useMemo(() => {
     if (!stats?.visits) return [];
-    const byId = new Map(fountains.map((f) => [f.fountain_id, f]));
-    return stats.visits.map((v) => {
-      const f = byId.get(v.fountain_id);
-      return {
-        ...v,
-        name: v.name ?? f?.name ?? `Fountain #${v.fountain_id}`,
-        latitude: v.latitude ?? f?.latitude ?? null,
-        longitude: v.longitude ?? f?.longitude ?? null,
-      };
-    });
-  }, [stats, fountains]);
+    return stats.visits
+      .map((v) => {
+        const f = fountainById.get(v.fountain_id);
+        return {
+          ...v,
+          name: v.name ?? f?.name ?? `Fountain #${v.fountain_id}`,
+          latitude: v.latitude ?? f?.latitude ?? null,
+          longitude: v.longitude ?? f?.longitude ?? null,
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.times_visited - a.times_visited ||
+          (new Date(b.last_visited).getTime() || 0) - (new Date(a.last_visited).getTime() || 0) ||
+          String(a.name).localeCompare(String(b.name)),
+      );
+  }, [stats, fountainById]);
 
   // Fountains this user has reviewed, with names filled in from the catalogue.
   const reviewed = useMemo(() => {
     if (!stats?.reviews) return [];
-    const byId = new Map(fountains.map((f) => [f.fountain_id, f]));
     return stats.reviews.map((r) => {
-      const f = byId.get(r.fountain_id);
+      const f = fountainById.get(r.fountain_id);
       return {
         ...r,
         name: f?.name ?? `Fountain #${r.fountain_id}`,
@@ -102,7 +101,7 @@ export default function ProfilePage() {
         longitude: f?.longitude ?? null,
       };
     });
-  }, [stats, fountains]);
+  }, [stats, fountainById]);
 
   // Keep the page in step with the database after an edit or delete (no full reload needed).
   function handleReviewSaved(updated) {
@@ -282,18 +281,9 @@ export default function ProfilePage() {
                       </span>
                     </div>
                     <p style={visitMeta}>
-                      Last used {formatDate(v.last_visited)}
+                      Last used {formatDate(v.last_visited, "—")}
                     </p>
-                    {Number.isFinite(v.latitude) && Number.isFinite(v.longitude) && (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${v.latitude},${v.longitude}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={mapLink}
-                      >
-                        Open in Google Maps ↗
-                      </a>
-                    )}
+                    <MapLink latitude={v.latitude} longitude={v.longitude} />
                   </article>
                 ))}
               </div>
@@ -302,6 +292,21 @@ export default function ProfilePage() {
         )}
       </main>
     </div>
+  );
+}
+
+// "Open in Google Maps" link; renders nothing when the fountain has no coordinates.
+function MapLink({ latitude, longitude }) {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return (
+    <a
+      href={`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`}
+      target="_blank"
+      rel="noreferrer"
+      style={mapLink}
+    >
+      Open in Google Maps ↗
+    </a>
   );
 }
 
@@ -369,21 +374,7 @@ function ReviewCard({ r, mobile, onSaved, onDeleted }) {
 
       {mode === "edit" ? (
         <form onSubmit={save} style={{ display: "grid", gap: 8 }}>
-          <div role="radiogroup" aria-label="Star rating" style={{ display: "flex", gap: 2 }}>
-            {[1, 2, 3, 4, 5].map((s) => (
-              <button
-                key={s}
-                type="button"
-                role="radio"
-                aria-checked={stars === s}
-                aria-label={`${s} star${s === 1 ? "" : "s"}`}
-                onClick={() => setStars(s)}
-                style={{ ...starBtn, color: s <= stars ? "#f6c445" : "#d7e2ea" }}
-              >
-                ★
-              </button>
-            ))}
-          </div>
+          <StarPicker value={stars} onChange={setStars} size={30} />
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -402,7 +393,7 @@ function ReviewCard({ r, mobile, onSaved, onDeleted }) {
         </form>
       ) : (
         <>
-          <p style={visitMeta}>Reviewed {formatDate(r.created_at)}</p>
+          <p style={visitMeta}>Reviewed {formatDate(r.created_at, "—")}</p>
           <p style={reviewBody}>{r.body}</p>
           {mode === "confirm" ? (
             <div style={{ display: "grid", gap: 8 }}>
@@ -426,16 +417,7 @@ function ReviewCard({ r, mobile, onSaved, onDeleted }) {
               <button type="button" onClick={() => { setError(""); setMode("confirm"); }} style={{ ...linkBtn, color: "#c0392b" }}>
                 Delete
               </button>
-              {Number.isFinite(r.latitude) && Number.isFinite(r.longitude) && (
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={mapLink}
-                >
-                  Open in Google Maps ↗
-                </a>
-              )}
+              <MapLink latitude={r.latitude} longitude={r.longitude} />
             </div>
           )}
         </>
@@ -461,7 +443,6 @@ const linkBtn = {
   cursor: "pointer",
   fontFamily: SANS,
 };
-const starBtn = { background: "none", border: "none", padding: 0, fontSize: 30, lineHeight: 1, cursor: "pointer" };
 const reviewTextarea = {
   width: "100%",
   boxSizing: "border-box",

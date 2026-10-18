@@ -6,8 +6,9 @@ import { useMockUser } from "../../../lib/useMockUser";
 import SiteHeader from "../../../components/SiteHeader";
 import FountainMapLoader from "../../../components/FountainMapLoader";
 import FountainActions from "../../../components/FountainActions";
+import { listMyVisits } from "../../../lib/collection";
 import FountainDetailModal from "../../../components/FountainDetailModal";
-import WaterDrop from "../../../components/WaterDrop";
+import { Stars } from "../../../components/Stars";
 import { useIsMobile } from "../../../lib/useIsMobile";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -15,57 +16,55 @@ const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 
 const BLUE = "#4D80AA";
 const CREAM = "#fbf4dc";
-const STAR = "#f6c445";
 const POPULAR_COUNT = 6;
 
-// Star rating (supports decimals, e.g. 4.4 fills 88% of the row).
+// Stars + average + count for a Popular card (e.g. ★★★★☆ 4.4 (12)).
 function StarRating({ value, count }) {
-  const v = Math.max(0, Math.min(5, Number(value) || 0));
   return (
     <div style={starRow}>
-      <span style={starTrack} aria-hidden="true">
-        ★★★★★
-        <span style={{ ...starFill, width: `${(v / 5) * 100}%` }}>★★★★★</span>
-      </span>
-      <span style={{ fontWeight: 700 }}>{count > 0 ? v.toFixed(1) : "No ratings yet"}</span>
+      <Stars value={value} />
+      <span style={{ fontWeight: 700 }}>{count > 0 ? Number(value).toFixed(1) : "No ratings yet"}</span>
       {count > 0 && <span style={{ color: "#6b7b8a" }}>({count})</span>}
     </div>
   );
 }
 
-// While the mouse is over the drawing: the "Go to Profile" label hangs off the cursor (its top-left
-// corner sits right under the pointer, so it reads as bottom-right of the mouse), and little bubbles
-// float up from wherever the mouse moves.
+// Little bubbles float up from wherever the mouse moves over `e.currentTarget`, which needs an empty
+// <span className="bubble-layer" /> inside it. Used on the profile drawing and on the Popular cards.
 let lastBubbleAt = 0;
-function followMouse(e) {
+function trailBubbles(e) {
   const host = e.currentTarget;
+  const layer = host.querySelector(".bubble-layer");
+  const now = performance.now();
+  if (!layer || now - lastBubbleAt <= 70 || layer.childElementCount > 40) return;
+  lastBubbleAt = now;
+
   const box = host.getBoundingClientRect();
   const px = e.clientX - box.left;
   const py = e.clientY - box.top;
+  const size = 8 + Math.random() * 16;
+  const bubble = document.createElement("span");
+  bubble.className = "mouse-bubble";
+  bubble.style.cssText =
+    `left:${px - size / 2 + (Math.random() * 16 - 8)}px;top:${py - size / 2}px;` +
+    `width:${size}px;height:${size}px;` +
+    `--dx:${Math.round(Math.random() * 44 - 22)}px;--rise:${Math.round(60 + Math.random() * 70)}px`;
+  bubble.addEventListener("animationend", () => bubble.remove());
+  layer.appendChild(bubble);
+}
 
-  const tip = host.querySelector(".profile-tip");
+// Over the profile drawing, the "Go to Profile" label hangs off the cursor (its top-left corner sits
+// right under the pointer, so it reads as bottom-right of the mouse), plus the bubble trail.
+function followMouse(e) {
+  const box = e.currentTarget.getBoundingClientRect();
+  const tip = e.currentTarget.querySelector(".profile-tip");
   if (tip) {
-    tip.style.left = `${Math.min(Math.max(px - 8, 0), box.width - tip.offsetWidth)}px`;
-    tip.style.top = `${Math.min(Math.max(py - 6, 0), box.height - tip.offsetHeight)}px`;
+    tip.style.left = `${Math.min(Math.max(e.clientX - box.left - 8, 0), box.width - tip.offsetWidth)}px`;
+    tip.style.top = `${Math.min(Math.max(e.clientY - box.top - 6, 0), box.height - tip.offsetHeight)}px`;
     tip.style.bottom = "auto";
     tip.style.transform = "none";
   }
-
-  const now = performance.now();
-  const layer = host.querySelector(".bubble-layer");
-  if (layer && now - lastBubbleAt > 70) {
-    lastBubbleAt = now;
-    if (layer.childElementCount > 40) return;
-    const size = 8 + Math.random() * 16;
-    const bubble = document.createElement("span");
-    bubble.className = "mouse-bubble";
-    bubble.style.cssText =
-      `left:${px - size / 2 + (Math.random() * 16 - 8)}px;top:${py - size / 2}px;` +
-      `width:${size}px;height:${size}px;` +
-      `--dx:${Math.round(Math.random() * 44 - 22)}px;--rise:${Math.round(60 + Math.random() * 70)}px`;
-    bubble.addEventListener("animationend", () => bubble.remove());
-    layer.appendChild(bubble);
-  }
+  trailBubbles(e);
 }
 function resetTip(e) {
   const tip = e.currentTarget.querySelector(".profile-tip");
@@ -79,6 +78,22 @@ export default function Homepage() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState(null); // popular card whose pop-up is open
   const [refreshKey, setRefreshKey] = useState(0); // bump to re-rank after a new review
+  const [visitCounts, setVisitCounts] = useState(() => new Map()); // fountain_id -> how many times I've used it
+
+  // Which fountains this user has already used, so each card's button can say "Used it again".
+  useEffect(() => {
+    if (!loggedIn) {
+      setVisitCounts(new Map());
+      return;
+    }
+    let active = true;
+    listMyVisits().then((visits) => {
+      if (active) setVisitCounts(new Map(visits.map((v) => [v.fountain_id, v.times_visited])));
+    });
+    return () => {
+      active = false;
+    };
+  }, [loggedIn]);
 
   // Popular list: the 6 highest-rated fountains. Ratings come live from the
   // database (the FastAPI backend); fountains nobody has rated yet are ordered
@@ -139,8 +154,6 @@ export default function Homepage() {
       <SiteHeader />
 
       <main style={isMobile ? contentMobile : content}>
-        <h1 style={isMobile ? pageTitleMobile : pageTitle}>Water Fountains</h1>
-
         {/* Cards */}
         <div
           style={
@@ -154,21 +167,11 @@ export default function Homepage() {
           {/* Map card — live map of every fountain */}
           <div style={card}>
             <FountainMapLoader
-              height={isMobile ? 220 : loggedIn ? 420 : 360}
+              // Desktop: tall enough that the map fills the screen, so "See where's popular!"
+              // starts just below the fold (header + padding ~80px). Never shorter than 420px.
+              height={isMobile ? 220 : "max(420px, calc(100vh - 80px))"}
               zoom={15}
             />
-            <div style={isMobile ? cardFooterMobile : cardFooter}>
-              <h2 style={isMobile ? cardTitleMobile : cardTitle}>
-                <Link href="/map" style={{ color: "inherit", textDecoration: "none" }}>
-                  Water Fountains{" "}
-                  <WaterDrop height={26} style={{ marginLeft: 2 }} />
-                </Link>
-              </h2>
-              <p style={cardSubtitle}>
-                A map of all the water fountains on the University of California,
-                Irvine Campus
-              </p>
-            </div>
           </div>
 
           {/* Profile link — logged-in only: just the drawing, with a label on hover */}
@@ -220,12 +223,7 @@ export default function Homepage() {
         </div>
 
         {/* Popular */}
-        <h2 style={isMobile ? popularHeadingMobile : popularHeading}>
-          <span style={isMobile ? starMobile : star} aria-hidden="true">
-            ★
-          </span>
-          Popular
-        </h2>
+        <h2 style={isMobile ? popularHeadingMobile : popularHeading}>See where&apos;s popular!</h2>
 
         {loading ? (
           <p style={muted}>Loading…</p>
@@ -254,6 +252,7 @@ export default function Homepage() {
                   role="button"
                   tabIndex={0}
                   aria-label={`View details for ${fountain.name}`}
+                  onMouseMove={trailBubbles}
                   onClick={() => setSelectedId(fountain.fountain_id)}
                   onKeyDown={(e) => {
                     // Enter / Space open it (only when the card itself has focus)
@@ -308,11 +307,16 @@ export default function Homepage() {
                         <FountainActions
                           fountainId={fountain.fountain_id}
                           username={user?.username}
+                          initialTimesVisited={visitCounts.get(fountain.fountain_id) ?? 0}
+                          onVisited={(times) =>
+                            setVisitCounts((m) => new Map(m).set(fountain.fountain_id, times))
+                          }
                           compact
                         />
                       </div>
                     )}
                   </div>
+                  <span className="bubble-layer" aria-hidden="true" />
                 </article>
               );
             })}
@@ -375,14 +379,6 @@ const page = {
 
 const content = { padding: "28px 44px 72px" };
 
-const pageTitle = {
-  fontFamily: SERIF,
-  fontSize: 42,
-  fontWeight: 700,
-  color: BLUE,
-  margin: "8px 0 26px",
-};
-
 const cardsLoggedOut = {
   display: "grid",
   gridTemplateColumns: "1fr",
@@ -416,33 +412,16 @@ const profileArt = {
   borderRadius: 18,
 };
 const profileArtMobile = { ...profileArt, minHeight: 340 };
+// 88% of the cell, centered (a little smaller than filling it completely).
 const profileArtImg = {
   position: "absolute",
-  inset: 0,
-  width: "100%",
-  height: "100%",
+  top: "6%",
+  left: "6%",
+  width: "88%",
+  height: "88%",
   display: "block",
   overflow: "visible",
 };
-
-const cardImageShort = {
-  width: "100%",
-  height: 300,
-  objectFit: "cover",
-  display: "block",
-};
-
-const cardFooter = { padding: "18px 24px 22px", background: "#ffffff" };
-
-const cardTitle = {
-  fontFamily: SERIF,
-  fontSize: 30,
-  fontWeight: 700,
-  color: BLUE,
-  margin: 0,
-};
-
-const cardSubtitle = { margin: "8px 0 0", fontSize: 14, color: "#23395d" };
 
 const popularHeading = {
   display: "flex",
@@ -455,15 +434,7 @@ const popularHeading = {
   margin: "48px 0 24px",
 };
 
-const star = { color: STAR, fontSize: 40, lineHeight: 1 };
-
 const muted = { color: "#23395d", opacity: 0.8, fontSize: 16 };
-
-const popularGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(min(380px, 100%), 1fr))",
-  gap: 28,
-};
 
 const popularCard = {
   position: "relative",
@@ -506,22 +477,6 @@ const starRow = {
   fontSize: 13,
   color: "#23395d",
 };
-const starTrack = {
-  position: "relative",
-  display: "inline-block",
-  color: "#d7e2ea",
-  letterSpacing: 1,
-  lineHeight: 1,
-  fontSize: 16,
-};
-const starFill = {
-  position: "absolute",
-  left: 0,
-  top: 0,
-  overflow: "hidden",
-  whiteSpace: "nowrap",
-  color: STAR,
-};
 
 const popularFooter = {
   padding: "14px 18px",
@@ -533,8 +488,6 @@ const popularFooter = {
 };
 
 const popularAction = { display: "flex" };
-
-const popularName = { fontWeight: 600, fontSize: 17, color: "#23395d" };
 
 const attribution = {
   margin: "14px 0 0",
@@ -576,8 +529,6 @@ const popularTitleMobile = { ...popularTitleDesk, padding: "14px 18px", fontSize
 // ---- Mobile layout ----------------------------------------------------------
 const contentMobile = { padding: "18px 16px 48px" };
 
-const pageTitleMobile = { ...pageTitle, fontSize: 30, margin: "4px 0 18px" };
-
 const cardsMobile = {
   display: "grid",
   gridTemplateColumns: "1fr",
@@ -585,20 +536,12 @@ const cardsMobile = {
   alignItems: "stretch",
 };
 
-const cardImageShortMobile = { ...cardImageShort, height: 220 };
-
-const cardFooterMobile = { ...cardFooter, padding: "14px 18px 18px" };
-
-const cardTitleMobile = { ...cardTitle, fontSize: 24 };
-
 const popularHeadingMobile = {
   ...popularHeading,
   fontSize: 30,
   gap: 10,
   margin: "32px 0 16px",
 };
-
-const starMobile = { ...star, fontSize: 28 };
 
 const popularGridMobile = {
   display: "grid",
