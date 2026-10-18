@@ -56,7 +56,8 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
     load();
   }, [load, loggedIn]);
 
-  const mine = reviews.find((r) => r.is_mine);
+  // Only a written review hides the form (a stars-only rating can still become a review).
+  const mine = reviews.find((r) => r.is_mine && r.review_id != null);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -90,7 +91,7 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
 
   async function handleSaveEdit(e) {
     e.preventDefault();
-    if (busy) return;
+    if (busy || editingId == null) return;
     if (editStars < 1) {
       setError("Pick a star rating first.");
       return;
@@ -180,9 +181,9 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
         (reviews.length === 0 ? (
           <p style={muted}>No reviews yet — be the first to share one!</p>
         ) : (
-          <ul style={list}>
+          <ul style={isMobile ? listMobile : list}>
             {reviews.map((r) => (
-              <li key={r.review_id} style={isMobile ? itemMobile : item}>
+              <li key={r.review_id ?? `rating-${r.username}`} style={isMobile ? itemMobile : item}>
                 <div style={isMobile ? metaMobile : meta}>
                   <span>
                     <strong style={{ color: BLUE }}>{r.username}</strong>{" "}
@@ -190,7 +191,7 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
                   </span>
                   <span style={date}>{formatDate(r.created_at)}</span>
                 </div>
-                {editingId === r.review_id ? (
+                {r.is_mine && r.review_id != null && editingId === r.review_id ? (
                   <form onSubmit={handleSaveEdit} style={form}>
                     <div role="radiogroup" aria-label="Star rating" style={starRow}>
                       {[1, 2, 3, 4, 5].map((n) => (
@@ -233,8 +234,8 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
                   </form>
                 ) : (
                   <>
-                    <p style={bodyText}>{r.body}</p>
-                    {r.is_mine && (
+                    {r.body ? <p style={bodyText}>{r.body}</p> : null}
+                    {r.is_mine && r.review_id != null && (
                       <div style={{ display: "flex", gap: 14 }}>
                         <button
                           type="button"
@@ -319,7 +320,17 @@ const heading = {
   paddingTop: 16,
 };
 const muted = { color: "#6b7b8a", fontSize: 14, margin: "8px 0" };
-const list = { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 12 };
+// The list scrolls on its own, so every review is reachable and the write-a-review form stays in view.
+const list = {
+  listStyle: "none",
+  margin: 0,
+  padding: "0 6px 0 0",
+  display: "grid",
+  gap: 12,
+  maxHeight: 280,
+  overflowY: "auto",
+  overscrollBehavior: "contain",
+};
 const item = { background: "#f6f9fc", borderRadius: 10, padding: "10px 14px" };
 const meta = {
   display: "flex",
@@ -418,6 +429,7 @@ const errorStyle = { fontSize: 13, color: "#c0392b", margin: "8px 0 0" };
 
 // ---- Mobile layout ----------------------------------------------------------
 const headingMobile = { ...heading, fontSize: 18 };
+const listMobile = { ...list, maxHeight: 240 };
 const itemMobile = { ...item, padding: "10px 12px" };
 const metaMobile = { ...meta, flexWrap: "wrap", rowGap: 4 };
 const starBtnMobile = { ...starBtn, fontSize: 34 };
