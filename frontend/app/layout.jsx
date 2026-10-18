@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "UCI Water Station Test",
+  title: "ZotWater",
 };
 
 export default function RootLayout({ children }) {
