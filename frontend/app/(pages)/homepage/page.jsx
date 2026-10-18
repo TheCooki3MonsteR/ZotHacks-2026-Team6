@@ -6,6 +6,7 @@ import { useMockUser } from "../../../lib/useMockUser";
 import SiteHeader from "../../../components/SiteHeader";
 import FountainMapLoader from "../../../components/FountainMapLoader";
 import FountainActions from "../../../components/FountainActions";
+import FountainDetailModal from "../../../components/FountainDetailModal";
 import WaterDrop from "../../../components/WaterDrop";
 import { useIsMobile } from "../../../lib/useIsMobile";
 
@@ -22,6 +23,8 @@ export default function Homepage() {
   const isMobile = useIsMobile();
   const [fountains, setFountains] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState(null); // popular card whose pop-up is open
+  const [refreshKey, setRefreshKey] = useState(0); // bump to re-rank after a new review
 
   // Popular list: the 6 highest-rated fountains. Ratings come live from the
   // database (the FastAPI backend); fountains nobody has rated yet are ordered
@@ -74,14 +77,15 @@ export default function Homepage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [refreshKey]);
 
   return (
     <div style={page}>
+      <style>{POPULAR_CSS}</style>
       <SiteHeader />
 
       <main style={isMobile ? contentMobile : content}>
-        <h1 style={isMobile ? pageTitleMobile : pageTitle}>Water Fountains - Near You</h1>
+        <h1 style={isMobile ? pageTitleMobile : pageTitle}>Water Fountains</h1>
 
         {/* Cards */}
         <div
@@ -101,8 +105,10 @@ export default function Homepage() {
             />
             <div style={isMobile ? cardFooterMobile : cardFooter}>
               <h2 style={isMobile ? cardTitleMobile : cardTitle}>
-                Water Fountains{" "}
-                <WaterDrop height={26} style={{ marginLeft: 2 }} />
+                <Link href="/map" style={{ color: "inherit", textDecoration: "none" }}>
+                  Water Fountains{" "}
+                  <WaterDrop height={26} style={{ marginLeft: 2 }} />
+                </Link>
               </h2>
               <p style={cardSubtitle}>
                 A map of all the water fountains on the University of California,
@@ -113,7 +119,7 @@ export default function Homepage() {
 
           {/* Collectables card — logged-in only */}
           {loggedIn && (
-            <Link href="/collectables" style={{ ...card, background: "#f3ecd4" }}>
+            <Link href="/profile" style={{ ...card, background: "#f3ecd4" }}>
               <img
                 src="/images/collectables.png"
                 alt="Anteater mascot holding a glass of water"
@@ -125,7 +131,7 @@ export default function Homepage() {
               />
               <div style={isMobile ? cardFooterMobile : cardFooter}>
                 <h2 style={isMobile ? cardTitleMobile : cardTitle}>
-                  Collectables{" "}
+                  Profile{" "}
                   <WaterDrop height={26} style={{ marginLeft: 2 }} />
                 </h2>
                 <p style={cardSubtitle}>See your experience</p>
@@ -147,7 +153,7 @@ export default function Homepage() {
         ) : fountains.length === 0 ? (
           <p style={muted}>No fountains to show yet.</p>
         ) : (
-          <div style={isMobile ? popularGridMobile : popularGrid}>
+          <div style={isMobile ? popularGridMobile : popularGridDesk}>
             {fountains.map((fountain) => {
               const hasCoords =
                 Number.isFinite(fountain.latitude) &&
@@ -158,36 +164,54 @@ export default function Homepage() {
               const imageSrc = fountain.image_url
                 ? fountain.image_url
                 : hasCoords
-                  ? `/api/map-snapshot?lat=${fountain.latitude}&lng=${fountain.longitude}&r=${fountain.avg_rating}&w=760&h=440`
+                  ? `/api/map-snapshot?lat=${fountain.latitude}&lng=${fountain.longitude}&r=${fountain.avg_rating}&w=760&h=440&z=18`
                   : "/images/fountain-placeholder.svg";
 
               return (
-                <article key={fountain.fountain_id} style={popularCard}>
-                  <img
-                    src={imageSrc}
-                    alt={`Map pin at ${fountain.name}`}
-                    loading="lazy"
-                    style={isMobile ? popularImageMobile : popularImage}
-                  />
-                  <div
-                    style={{
-                      ...quoteBubble,
-                      ...(isMobile ? quoteBubbleMobile : null),
-                      bottom: isMobile
-                        ? loggedIn
-                          ? 122
-                          : 72
-                        : loggedIn
-                          ? 134
-                          : 78,
-                    }}
-                  >
-                    “{fountain.quote || fountain.description}”
+                <article
+                  key={fountain.fountain_id}
+                  className="popular-card"
+                  style={popularCard}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View details for ${fountain.name}`}
+                  onClick={() => setSelectedId(fountain.fountain_id)}
+                  onKeyDown={(e) => {
+                    // Enter / Space open it (only when the card itself has focus)
+                    if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      setSelectedId(fountain.fountain_id);
+                    }
+                  }}
+                >
+                  <div style={isMobile ? popularTitleMobile : popularTitleDesk}>
+                    {fountain.name}
                   </div>
-                  <div style={popularFooter}>
-                    <span style={isMobile ? popularNameMobile : popularName}>{fountain.name}</span>
+                  <div style={{ position: "relative" }}>
+                    <img
+                      src={imageSrc}
+                      alt={`Map pin at ${fountain.name}`}
+                      loading="lazy"
+                      style={isMobile ? popularImageMobile : popularImageDesk}
+                    />
+                    <div
+                      style={{
+                        ...quoteBubble,
+                        ...(isMobile ? quoteBubbleMobile : quoteBubbleDesk),
+                        bottom: 10,
+                      }}
+                    >
+                      {fountain.quote || fountain.description}
+                    </div>
+                  </div>
+                  <div style={isMobile ? popularFooter : popularFooterDesk}>
                     {loggedIn && (
-                      <div style={popularAction}>
+                      /* Clicking the refill button shouldn't also open the pop-up. */
+                      <div
+                        style={popularAction}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      >
                         <FountainActions
                           fountainId={fountain.fountain_id}
                           username={user?.username}
@@ -206,9 +230,25 @@ export default function Homepage() {
           <p style={attribution}>Map imagery © OpenStreetMap contributors</p>
         )}
       </main>
+
+      {/* Same pop-up as clicking a pin on the map */}
+      {selectedId != null && (
+        <FountainDetailModal
+          fountainId={selectedId}
+          onClose={() => setSelectedId(null)}
+          onRatingChanged={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
     </div>
   );
 }
+
+// Popular cards are clickable: pointer cursor, a small lift on hover, focus ring for keyboard users.
+const POPULAR_CSS = `
+.popular-card { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.popular-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.14) !important; }
+.popular-card:focus-visible { outline: 3px solid #2f6bd8; outline-offset: 2px; }
+`;
 
 const page = {
   minHeight: "100vh",
@@ -314,11 +354,10 @@ const quoteBubble = {
   left: 22,
   right: 22,
   bottom: 78,
-  background: "rgba(255,255,255,0.92)",
+  background: "rgba(255,255,255,0.72)",
   borderRadius: 10,
   padding: "12px 16px",
-  fontStyle: "italic",
-  fontSize: 15,
+  fontSize: 13,
   lineHeight: 1.35,
   color: "#333333",
   textAlign: "center",
@@ -346,6 +385,37 @@ const attribution = {
   fontSize: 12,
   color: "#8a97a3",
 };
+
+// ---- Desktop popular cards: compact (mobile keeps the original sizes below) ----
+const popularGridDesk = {
+  display: "grid",
+  // 3 equal columns spanning the full width -> the 6 popular fountains sit in an even 3x2 grid
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: 28,
+};
+
+const popularImageDesk = { ...popularImage, height: 200 };
+
+const quoteBubbleDesk = {
+  left: 14,
+  right: 14,
+  padding: "8px 12px",
+  fontSize: 11.5,
+  lineHeight: 1.3,
+  WebkitLineClamp: 2,
+};
+
+const popularFooterDesk = { ...popularFooter, padding: "10px 14px", gap: 8 };
+
+const popularTitleDesk = {
+  padding: "10px 14px",
+  textAlign: "center",
+  fontWeight: 600,
+  fontSize: 15,
+  color: "#23395d",
+  background: "#ffffff",
+};
+const popularTitleMobile = { ...popularTitleDesk, padding: "14px 18px", fontSize: 16 };
 
 // ---- Mobile layout ----------------------------------------------------------
 const contentMobile = { padding: "18px 16px 48px" };
@@ -382,6 +452,5 @@ const popularGridMobile = {
 
 const popularImageMobile = { ...popularImage, height: 180 };
 
-const quoteBubbleMobile = { left: 14, right: 14, fontSize: 14 };
+const quoteBubbleMobile = { left: 14, right: 14, fontSize: 12.5 };
 
-const popularNameMobile = { ...popularName, fontSize: 16 };

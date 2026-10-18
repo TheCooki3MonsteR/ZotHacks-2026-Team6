@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -5,6 +7,8 @@ from sqlalchemy.orm import Session
 from db import get_session
 from models import User, UserVisited, WaterFountain
 from routers.auth import get_current_user
+
+COOLDOWN = timedelta(minutes=3)  # same user + same fountain: one refill per 3 minutes
 
 router = APIRouter(prefix="/api/fountains/{fountain_id}", tags=["visits"])
 
@@ -29,6 +33,17 @@ def record_visit(
         visit = UserVisited(user_id=user.user_id, fountain_id=fountain_id)
         session.add(visit)
     else:
+        last = visit.last_visited
+        if last is not None:
+            if last.tzinfo is None:  # some databases hand back naive times; treat them as UTC
+                last = last.replace(tzinfo=timezone.utc)
+            wait = COOLDOWN - (datetime.now(timezone.utc) - last)
+            if wait > timedelta(0):
+                raise HTTPException(
+                    429,
+                    "Cooldown!",
+                    headers={"Retry-After": str(int(wait.total_seconds()) + 1)},
+                )
         # "column + 1" is done by the database itself, so two quick clicks can't overwrite each other.
         visit.times_visited = UserVisited.times_visited + 1
         visit.last_visited = func.now()
