@@ -2,12 +2,43 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import FountainDetailModal from "./FountainDetailModal";
 
+// Aldrich Park, the middle of campus (and of the fountains).
 const UCI_CENTER = [33.6461, -117.8427];
+
+// Leaflet doesn't notice when its box changes size (e.g. the homepage card resizes once
+// login state loads), and the view slides off-center. Watch the box and re-center on the
+// park -- until the visitor drags or zooms the map themselves.
+function KeepCentered({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    let touched = false;
+    const mark = () => {
+      touched = true;
+    };
+    map.on("dragstart", mark);
+    map.on("zoomstart", mark);
+
+    const refit = () => {
+      map.invalidateSize({ animate: false });
+      if (!touched) map.setView(center, zoom, { animate: false });
+    };
+    const observer = new ResizeObserver(refit);
+    observer.observe(map.getContainer());
+    refit();
+
+    return () => {
+      observer.disconnect();
+      map.off("dragstart", mark);
+      map.off("zoomstart", mark);
+    };
+  }, [map, center, zoom]);
+  return null;
+}
 
 // Pin color follows the average star rating: unrated = light grey, then
 // getting steadily darker blue the higher the rating (5 stars = dark blue).
@@ -112,6 +143,8 @@ export default function FountainMap({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        <KeepCentered center={center} zoom={zoom} />
 
         {points.map((fountain) => (
           <Marker
