@@ -7,6 +7,7 @@ import { loadStats } from "../../../lib/clientApi";
 import { stickerSrc } from "../../../lib/collection";
 import SiteHeader from "../../../components/SiteHeader";
 import WaterDrop from "../../../components/WaterDrop";
+import Rosette from "../../../components/Rosette";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -15,10 +16,10 @@ const CREAM = "#fbf4dc";
 
 // Little milestone rewards — the "collectable" side of the page.
 const BADGES = [
-  { id: "first", label: "First Sip ", need: 1 },
-  { id: "hydrated", label: "Hydrated ", need: 5 },
-  { id: "quench", label: "Quenched ", need: 10 },
-  { id: "poisoned", label: "Water Poisoned ", need: 25 },
+  { id: "first", label: "First Sip", need: 1, variant: "outline" },
+  { id: "hydrated", label: "Hydrated", need: 5, variant: "tint" },
+  { id: "quench", label: "Quenched", need: 10, variant: "solid" },
+  { id: "poisoned", label: "Water Poisoned", need: 25, variant: "duo" },
 ];
 
 function formatDate(value) {
@@ -122,19 +123,19 @@ export default function CollectablesPage() {
             {/* Milestones */}
             <h2 style={sectionTitle}>Milestones</h2>
             <div style={badgeRow}>
-              {BADGES.map((badge) => {
-                const earned = totalVisits >= badge.need;
+              {BADGES.map((m) => {
+                const earned = totalVisits >= m.need;
                 return (
                   <div
-                    key={badge.id}
+                    key={m.id}
                     style={{ ...badge, opacity: earned ? 1 : 0.4 }}
                   >
-                    <WaterDrop height={26} />
+                    <Rosette variant={m.variant} size={56} />
                     <span style={{ fontWeight: 700, fontSize: 14 }}>
-                      {badge.label}
+                      {m.label}
                     </span>
                     <span style={{ fontSize: 12, color: "#6b7b8a" }}>
-                      {earned ? "Earned" : `${badge.need} refills`}
+                      {earned ? "Earned" : `${m.need} refills`}
                     </span>
                   </div>
                 );
