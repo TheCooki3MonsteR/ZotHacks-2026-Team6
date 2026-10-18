@@ -11,7 +11,9 @@ export default function SiteHeader() {
       <Link href="/" style={brand}>
         Zot Water
       </Link>
-      <nav style={navRight}>
+      {/* Inline styles can't do :hover, so the hover color lives in this tiny stylesheet. */}
+      <style>{HOVER_CSS}</style>
+      <nav style={navRight} className="site-nav">
         <Link href="/" style={navLink}>
           Home
         </Link>
@@ -43,29 +45,41 @@ const BLUE = "#1c4e9e";
 const NAV_BLUE = "#3e6fb8";
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 
+// Nav links fade to a lighter blue on hover/keyboard focus.
+const HOVER_CSS = `
+.site-nav a,
+.site-nav button { transition: color 0.15s ease; }
+.site-nav a:hover,
+.site-nav button:hover,
+.site-nav a:focus-visible,
+.site-nav button:focus-visible { color: #8fb6e8 !important; }
+`;
+
 const header = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  padding: "22px 44px",
+  padding: "10px 32px",
   background: "#ffffff",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.10)",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
 };
 
 const brand = {
   fontFamily: SERIF,
-  fontSize: 36,
+  fontSize: 26,
   fontWeight: 700,
+  letterSpacing: "-0.01em",
   color: BLUE,
   textDecoration: "none",
 };
 
-const navRight = { display: "flex", alignItems: "center", gap: 44 };
+const navRight = { display: "flex", alignItems: "center", gap: 22 };
 
 const navLink = {
   color: NAV_BLUE,
   textDecoration: "none",
-  fontSize: 20,
+  fontSize: 15,
+  fontWeight: 500,
   fontFamily: SANS,
 };
 
