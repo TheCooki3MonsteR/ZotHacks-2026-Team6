@@ -24,6 +24,18 @@ export async function addReview(fountainId, rating, body) {
   return res.json();
 }
 
+// Edit your own review (new stars + new text). Returns { review_id, fountain_id, rating, body, created_at }.
+export async function updateReview(reviewId, rating, body) {
+  const res = await fetch(`/backend/reviews/${reviewId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ rating, body }),
+  });
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn't save your changes."));
+  return res.json();
+}
+
 export async function deleteReview(reviewId) {
   const res = await fetch(`/backend/reviews/${reviewId}`, {
     method: "DELETE",
@@ -45,14 +57,19 @@ export async function fetchRatingSummary(fountainId) {
   }
 }
 
-export async function countMyReviews() {
+// Every review the logged-in user has written: [{ review_id, fountain_id, rating, body, created_at }]
+export async function listMyReviews() {
   try {
     const res = await fetch("/backend/me/reviews", {
       credentials: "same-origin",
       cache: "no-store",
     });
-    return res.ok ? (await res.json()).length : 0;
+    return res.ok ? await res.json() : [];
   } catch {
-    return 0;
+    return [];
   }
+}
+
+export async function countMyReviews() {
+  return (await listMyReviews()).length;
 }

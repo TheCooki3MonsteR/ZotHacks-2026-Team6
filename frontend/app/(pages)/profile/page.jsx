@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMockUser } from "../../../lib/useMockUser";
 import { loadStats } from "../../../lib/clientApi";
+import { deleteReview, updateReview } from "../../../lib/reviews";
 import { stickerSrc } from "../../../lib/collection";
 import SiteHeader from "../../../components/SiteHeader";
 import WaterDrop from "../../../components/WaterDrop";
@@ -85,6 +86,35 @@ export default function ProfilePage() {
       };
     });
   }, [stats, fountains]);
+
+  // Fountains this user has reviewed, with names filled in from the catalogue.
+  const reviewed = useMemo(() => {
+    if (!stats?.reviews) return [];
+    const byId = new Map(fountains.map((f) => [f.fountain_id, f]));
+    return stats.reviews.map((r) => {
+      const f = byId.get(r.fountain_id);
+      return {
+        ...r,
+        name: f?.name ?? `Fountain #${r.fountain_id}`,
+        latitude: f?.latitude ?? null,
+        longitude: f?.longitude ?? null,
+      };
+    });
+  }, [stats, fountains]);
+
+  // Keep the page in step with the database after an edit or delete (no full reload needed).
+  function handleReviewSaved(updated) {
+    setStats((s) =>
+      s ? { ...s, reviews: s.reviews.map((r) => (r.review_id === updated.review_id ? { ...r, ...updated } : r)) } : s
+    );
+  }
+  function handleReviewDeleted(reviewId) {
+    setStats((s) => {
+      if (!s) return s;
+      const reviews = s.reviews.filter((r) => r.review_id !== reviewId);
+      return { ...s, reviews, comments_count: reviews.length };
+    });
+  }
 
   const totalVisits = stats?.total_visits ?? 0;
   const collected = stats?.fountains_visited ?? 0;
@@ -227,12 +257,234 @@ export default function ProfilePage() {
                 ))}
               </div>
             )}
+
+            {/* Fountains the user has reviewed */}
+            <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>
+              Fountains you&apos;ve reviewed
+              {reviewed.length > 0 && ` (${reviewed.length})`}
+            </h2>
+
+            {reviewed.length === 0 ? (
+              <div style={isMobile ? emptyCardMobile : emptyCard}>
+                <p style={{ margin: 0, fontSize: 16 }}>
+                  You haven&apos;t reviewed any fountains yet.
+                </p>
+                <p style={{ margin: "6px 0 0", color: "#6b7b8a", fontSize: 14 }}>
+                  Open a fountain and post a review to see it here.
+                </p>
+                <Link href="/homepage" style={cta}>
+                  Find a fountain
+                </Link>
+              </div>
+            ) : (
+              <div style={isMobile ? visitGridMobile : visitGrid}>
+                {reviewed.map((r) => (
+                  <ReviewCard
+                    key={r.review_id}
+                    r={r}
+                    mobile={isMobile}
+                    onSaved={handleReviewSaved}
+                    onDeleted={handleReviewDeleted}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </main>
     </div>
   );
 }
+
+// One reviewed fountain, with Edit / Delete. Talks to PUT/DELETE /api/reviews/{id}, which
+// update the same ratings + reviews tables the fountain pop-up reads from.
+function ReviewCard({ r, mobile, onSaved, onDeleted }) {
+  const [mode, setMode] = useState("view"); // view | edit | confirm
+  const [stars, setStars] = useState(0);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  function startEdit() {
+    setStars(Math.round(Number(r.rating)) || 0);
+    setText(r.body);
+    setError("");
+    setMode("edit");
+  }
+
+  async function save(e) {
+    e.preventDefault();
+    if (busy) return;
+    if (stars < 1) return setError("Pick a star rating first.");
+    if (!text.trim()) return setError("Review can't be blank.");
+    setBusy(true);
+    setError("");
+    try {
+      const updated = await updateReview(r.review_id, stars, text.trim());
+      onSaved(updated);
+      setMode("view");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await deleteReview(r.review_id);
+      onDeleted(r.review_id); // this card disappears
+    } catch (err) {
+      setError(err.message);
+      setMode("view");
+      setBusy(false);
+    }
+  }
+
+  const n = Math.round(Number(r.rating)) || 0;
+
+  return (
+    <article style={mobile ? visitCardMobile : visitCard}>
+      <div style={visitTop}>
+        <h3 style={mobile ? visitNameMobile : visitName}>{r.name}</h3>
+        {mode !== "edit" && r.rating != null && (
+          <span style={countPill} aria-label={`${n} out of 5 stars`}>
+            {"★".repeat(n)}
+            {"☆".repeat(5 - n)}
+          </span>
+        )}
+      </div>
+
+      {mode === "edit" ? (
+        <form onSubmit={save} style={{ display: "grid", gap: 8 }}>
+          <div role="radiogroup" aria-label="Star rating" style={{ display: "flex", gap: 2 }}>
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button
+                key={s}
+                type="button"
+                role="radio"
+                aria-checked={stars === s}
+                aria-label={`${s} star${s === 1 ? "" : "s"}`}
+                onClick={() => setStars(s)}
+                style={{ ...starBtn, color: s <= stars ? "#f6c445" : "#d7e2ea" }}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={1000}
+            rows={4}
+            style={reviewTextarea}
+          />
+          <div style={actionRow}>
+            <button type="submit" disabled={busy || !text.trim()} style={saveBtn}>
+              {busy ? "Saving…" : "Save"}
+            </button>
+            <button type="button" disabled={busy} onClick={() => setMode("view")} style={ghostBtn}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : (
+        <>
+          <p style={visitMeta}>Reviewed {formatDate(r.created_at)}</p>
+          <p style={reviewBody}>{r.body}</p>
+          {mode === "confirm" ? (
+            <div style={{ display: "grid", gap: 8 }}>
+              <span style={{ fontSize: 13, color: "#6b7b8a" }}>
+                Delete this review? Your star rating for this fountain is removed too.
+              </span>
+              <div style={actionRow}>
+                <button type="button" disabled={busy} onClick={remove} style={dangerBtn}>
+                  {busy ? "Deleting…" : "Yes, delete"}
+                </button>
+                <button type="button" disabled={busy} onClick={() => setMode("view")} style={ghostBtn}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={actionRow}>
+              <button type="button" onClick={startEdit} style={linkBtn}>
+                Edit
+              </button>
+              <button type="button" onClick={() => { setError(""); setMode("confirm"); }} style={{ ...linkBtn, color: "#c0392b" }}>
+                Delete
+              </button>
+              {Number.isFinite(r.latitude) && Number.isFinite(r.longitude) && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={mapLink}
+                >
+                  Open in Google Maps ↗
+                </a>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {error && (
+        <p role="alert" style={{ margin: 0, fontSize: 13, color: "#c0392b" }}>
+          {error}
+        </p>
+      )}
+    </article>
+  );
+}
+
+const actionRow = { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 14 };
+const linkBtn = {
+  background: "none",
+  border: "none",
+  padding: 0,
+  fontSize: 13,
+  fontWeight: 600,
+  color: BLUE,
+  cursor: "pointer",
+  fontFamily: SANS,
+};
+const starBtn = { background: "none", border: "none", padding: 0, fontSize: 30, lineHeight: 1, cursor: "pointer" };
+const reviewTextarea = {
+  width: "100%",
+  boxSizing: "border-box",
+  resize: "vertical",
+  border: "1px solid #d7e2ea",
+  borderRadius: 10,
+  padding: "10px 12px",
+  fontSize: 14,
+  fontFamily: SANS,
+  color: "#23395d",
+  outline: "none",
+};
+const saveBtn = {
+  border: "none",
+  borderRadius: 10,
+  background: "#ffc72c",
+  color: BLUE,
+  padding: "8px 18px",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  fontFamily: SANS,
+};
+const ghostBtn = {
+  border: "none",
+  background: "none",
+  color: "#6b7b8a",
+  fontSize: 14,
+  cursor: "pointer",
+  fontFamily: SANS,
+};
+const dangerBtn = { ...saveBtn, background: "#c0392b", color: "#ffffff" };
 
 const stickerGrid = {
   display: "grid",
@@ -376,6 +628,18 @@ const countPill = {
 };
 
 const visitMeta = { margin: 0, fontSize: 13, color: "#6b7b8a" };
+
+const reviewBody = {
+  margin: 0,
+  fontSize: 14,
+  color: "#23395d",
+  lineHeight: 1.45,
+  display: "-webkit-box",
+  WebkitLineClamp: 3,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+  overflowWrap: "anywhere",
+};
 
 const mapLink = {
   fontSize: 13,

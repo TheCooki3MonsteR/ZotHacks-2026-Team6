@@ -165,6 +165,42 @@ def delete_my_review(
     return {"status": "deleted"}
 
 
+@router.put("/reviews/{review_id}")
+def update_my_review(
+    review_id: int,
+    body: ReviewIn,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """Edit one of YOUR reviews: the new text and the new stars are saved together."""
+    review = session.get(Review, review_id)
+    # Someone else's review gets the same answer as one that doesn't exist.
+    if review is None or review.user_id != user.user_id:
+        raise HTTPException(404, "Review not found, or it isn't yours.")
+
+    text = body.body.strip()
+    if not text:
+        raise HTTPException(400, "Review can't be blank.")
+
+    review.body = text
+    rating_row = session.get(Rating, (user.user_id, review.fountain_id))
+    if rating_row is None:
+        session.add(Rating(user_id=user.user_id, fountain_id=review.fountain_id, rating=body.rating))
+    else:
+        rating_row.rating = body.rating
+        rating_row.rated_at = func.now()
+    session.commit()  # text and stars change together
+    session.refresh(review)
+
+    return {
+        "review_id": review.review_id,
+        "fountain_id": review.fountain_id,
+        "rating": body.rating,
+        "body": review.body,
+        "created_at": review.created_at,
+    }
+
+
 @router.get("/me/reviews")
 def my_reviews(
     user: User = Depends(get_current_user),

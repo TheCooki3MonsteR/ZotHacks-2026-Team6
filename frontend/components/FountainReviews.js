@@ -3,7 +3,7 @@
 import { LegendaryStyle, isLegendary } from "./legendaryFx";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { addReview, deleteReview, listReviews } from "../lib/reviews";
+import { addReview, deleteReview, listReviews, updateReview } from "../lib/reviews";
 import { stickerSrc } from "../lib/collection";
 import { useIsMobile } from "../lib/useIsMobile";
 
@@ -36,6 +36,9 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [reward, setReward] = useState(null); // what the last review unlocked
+  const [editingId, setEditingId] = useState(null); // review being edited, if any
+  const [editStars, setEditStars] = useState(0);
+  const [editText, setEditText] = useState("");
   const isMobile = useIsMobile();
 
   const load = useCallback(async () => {
@@ -71,6 +74,38 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
       setReward({ stickers: posted.stickers ?? [], times: posted.times_visited });
       await load();
       onChanged?.(posted);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function startEdit(r) {
+    setEditingId(r.review_id);
+    setEditStars(Math.round(Number(r.rating)) || 0);
+    setEditText(r.body);
+    setError("");
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault();
+    if (busy) return;
+    if (editStars < 1) {
+      setError("Pick a star rating first.");
+      return;
+    }
+    if (!editText.trim()) {
+      setError("Review can't be blank.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await updateReview(editingId, editStars, editText.trim());
+      setEditingId(null);
+      await load();
+      onChanged?.(); // refresh the average rating / map pin
     } catch (err) {
       setError(err.message);
     } finally {
@@ -155,16 +190,71 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
                   </span>
                   <span style={date}>{formatDate(r.created_at)}</span>
                 </div>
-                <p style={bodyText}>{r.body}</p>
-                {r.is_mine && (
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(r.review_id)}
-                    disabled={busy}
-                    style={deleteBtn}
-                  >
-                    Delete my review
-                  </button>
+                {editingId === r.review_id ? (
+                  <form onSubmit={handleSaveEdit} style={form}>
+                    <div role="radiogroup" aria-label="Star rating" style={starRow}>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={editStars === n}
+                          aria-label={`${n} star${n === 1 ? "" : "s"}`}
+                          onClick={() => setEditStars(n)}
+                          style={{
+                            ...(isMobile ? starBtnMobile : starBtn),
+                            color: n <= editStars ? "#f6c445" : "#d7e2ea",
+                          }}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      maxLength={1000}
+                      rows={3}
+                      style={textarea}
+                    />
+                    <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                      <button type="submit" disabled={busy || !editText.trim()} style={submitBtn}>
+                        {busy ? "Saving…" : "Save"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setEditingId(null)}
+                        style={{ ...deleteBtn, marginTop: 0, color: "#6b7b8a", fontSize: 14 }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <p style={bodyText}>{r.body}</p>
+                    {r.is_mine && (
+                      <div style={{ display: "flex", gap: 14 }}>
+                        <button
+                          type="button"
+                          onClick={() => startEdit(r)}
+                          disabled={busy}
+                          style={{ ...deleteBtn, color: BLUE }}
+                        >
+                          Edit my review
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(r.review_id)}
+                          disabled={busy}
+                          style={deleteBtn}
+                        >
+                          Delete my review
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </li>
             ))}
