@@ -2,36 +2,47 @@
 
 import Link from "next/link";
 import { useMockUser } from "../lib/useMockUser";
+import { useIsMobile } from "../lib/useIsMobile";
+import WaterDrop from "./WaterDrop";
 
 export default function SiteHeader() {
   const { loggedIn, logout } = useMockUser();
+  const isMobile = useIsMobile();
+
+  const linkStyle = isMobile ? navLinkMobile : navLink;
+  const buttonStyle = isMobile ? navButtonMobile : navButton;
 
   return (
-    <header style={header}>
-      <Link href="/" style={brand}>
-        Zot Water
+    <header style={isMobile ? headerMobile : header}>
+      <Link href="/" style={isMobile ? brandMobile : brand}>
+        Zot Water{" "}
+        <WaterDrop
+          height={isMobile ? 20 : 26}
+          alt=""
+          style={{ marginLeft: 4 }}
+        />
       </Link>
       {/* Inline styles can't do :hover, so the hover color lives in this tiny stylesheet. */}
       <style>{HOVER_CSS}</style>
-      <nav style={navRight} className="site-nav">
-        <Link href="/" style={navLink}>
+      <nav style={isMobile ? navRightMobile : navRight} className="site-nav">
+        <Link href="/" style={linkStyle}>
           Home
         </Link>
-        <Link href="/map" style={navLink}>
+        <Link href="/map" style={linkStyle}>
           Map
         </Link>
         {loggedIn && (
-          <Link href="/collectables" style={navLink}>
+          <Link href="/collectables" style={linkStyle}>
             Collectables
           </Link>
         )}
         {loggedIn ? (
-          <button type="button" onClick={logout} style={navButton}>
+          <button type="button" onClick={logout} style={buttonStyle}>
             Log out
           </button>
         ) : (
           // Logged-out visitors go to the login page (it links to signup).
-          <Link href="/login" style={navLink}>
+          <Link href="/login" style={linkStyle}>
             Login
           </Link>
         )}
@@ -41,7 +52,7 @@ export default function SiteHeader() {
 }
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
-const BLUE = "#1c4e9e";
+const BLUE = "#4D80AA";
 const NAV_BLUE = "#3e6fb8";
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 
@@ -89,4 +100,33 @@ const navButton = {
   border: "none",
   padding: 0,
   cursor: "pointer",
+};
+
+// ---- Mobile layout ----------------------------------------------------------
+const headerMobile = {
+  ...header,
+  padding: "14px 16px",
+  flexWrap: "wrap",
+  gap: 10,
+  rowGap: 8,
+};
+
+const brandMobile = { ...brand, fontSize: 26 };
+
+const navRightMobile = {
+  ...navRight,
+  gap: 18,
+  flexWrap: "wrap",
+};
+
+const navLinkMobile = {
+  ...navLink,
+  fontSize: 15,
+  padding: "4px 2px",
+};
+
+const navButtonMobile = {
+  ...navButton,
+  fontSize: 15,
+  padding: "4px 2px",
 };

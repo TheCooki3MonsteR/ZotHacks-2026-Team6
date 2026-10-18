@@ -1,9 +1,12 @@
+"use client";
+
 // Shared shell for the auth pages (login + signup): the wave artwork down the
 // left, the "Zot Water" logo top-left, the heading + form centered, and the
 // Peter the anteater mascot bottom-right. Pages render the same chrome and only
 // own their own fields + submit handler.
 
 import Link from "next/link";
+import { useIsMobile } from "../lib/useIsMobile";
 
 const WAVE_PATH =
   "M609.589 5.82227C607.155 45.865 618.532 76.0485 639.179 122.958C659.875 169.979 687.599 229.373 704.728 318.555L705.045 320.209L705.246 321.881C716.773 417.795 711.071 478.141 687.31 534.777C675.999 561.736 661.2 586.38 645.317 611.6C629.06 637.416 611.397 664.25 591.191 699.025C576.584 724.165 567.145 749.365 562 774.459V872.487C576.941 951.413 624.506 1026.99 675.688 1093.69L599.526 1152.13C577.672 1123.65 553.693 1090.2 531.908 1052.91H0V28.9111H513.591C513.13 19.6208 513.158 10.0016 513.766 0L609.589 5.82227Z";
@@ -21,15 +24,17 @@ const LIGHT_STRIPES = [
 ];
 
 export default function AuthShell({ title, children }) {
+  const isMobile = useIsMobile();
+
   return (
-    <main style={page}>
+    <main style={isMobile ? pageMobile : page}>
       {/* Decorative background: wave artwork down the left side */}
-      <aside style={waves} aria-hidden="true">
+      <aside style={isMobile ? wavesMobile : waves} aria-hidden="true">
         <svg
           viewBox="0 28.9111 711 1024"
           fill="none"
           preserveAspectRatio="xMinYMax slice"
-          style={waveArt}
+          style={isMobile ? waveArtMobile : waveArt}
         >
           <path d={WAVE_PATH} fill="#FFFDF7" />
           <mask
@@ -55,7 +60,7 @@ export default function AuthShell({ title, children }) {
       </aside>
 
       {/* Logo, top-left over the waves; clicking it goes back to the homepage */}
-      <Link href="/" aria-label="Zot Water - back to homepage" style={logoLink}>
+      <Link href="/" aria-label="Zot Water - back to homepage" style={isMobile ? logoLinkMobile : logoLink}>
       <svg
         viewBox="0 0 315 73"
         fill="none"
@@ -63,23 +68,23 @@ export default function AuthShell({ title, children }) {
         aria-label="Zot Water"
         style={logoSvg}
       >
-        <text fill="#6798C0" style={{ whiteSpace: "pre" }} xmlSpace="preserve" style={{ fontFamily: "inherit" }} fontSize="34" fontWeight="bold" letterSpacing="-0.02em">
+        <text fill="#4D80AA" style={{ whiteSpace: "pre" }} xmlSpace="preserve" style={{ fontFamily: "inherit" }} fontSize="34" fontWeight="bold" letterSpacing="-0.02em">
           <tspan x="81.3958" y="47.21">Zot Water</tspan>
         </text>
-        <path d="M273 11C271.44 20.02 260 28.63 260 37.24C260 45.85 265.824 52 273 52C280.176 52 286 45.85 286 37.24C286 28.63 274.56 20.02 273 11Z" fill="#6798C0" />
+        <path d="M273 11C271.44 20.02 260 28.63 260 37.24C260 45.85 265.824 52 273 52C280.176 52 286 45.85 286 37.24C286 28.63 274.56 20.02 273 11Z" fill="#4D80AA" />
         <path d="M273 17C271.8 23.82 263 30.33 263 36.84C263 43.35 267.48 48 273 48C278.52 48 283 43.35 283 36.84C283 30.33 274.2 23.82 273 17Z" fill="#99D6EB" />
         <ellipse cx="3.22639" cy="3.84235" rx="3.22639" ry="3.84235" transform="matrix(0.836572 0.547858 -0.533721 0.845661 271.113 23.7871)" fill="#FFFDF8" />
       </svg>
       </Link>
 
       {/* Center column: heading + form */}
-      <section style={centerColumn}>
-        <h1 style={heading}>{title}</h1>
+      <section style={isMobile ? centerColumnMobile : centerColumn}>
+        <h1 style={isMobile ? headingMobile : heading}>{title}</h1>
         {children}
       </section>
 
       {/* Decorative mascot, bottom-right; pointer events pass through */}
-      <div style={mascotWrap}>
+      <div style={isMobile ? mascotWrapMobile : mascotWrap}>
         <svg viewBox="0 0 266 88" fill="none" aria-hidden="true" style={mascotShadow}>
           <ellipse cx="133" cy="44" rx="133" ry="44" fill="#AFAFAF" fillOpacity="0.69" />
         </svg>
@@ -215,7 +220,7 @@ const heading = {
   fontSize: "clamp(28px, 3vw, 40px)",
   fontWeight: 700,
   letterSpacing: "0.01em",
-  color: "#6798C0",
+  color: "#4D80AA",
   textAlign: "center",
 };
 
@@ -258,4 +263,65 @@ const mascotImg = {
   height: "auto",
   transform: "scaleX(-1)",
   objectFit: "contain",
+};
+
+// ---- Mobile layout ----------------------------------------------------------
+// Phones keep the full artwork. The wave panel becomes a background band across
+// the bottom of the page (faded into the cream background at its top edge) and
+// the anteater, with its shadow, is laid out in normal flow along the bottom
+// edge so it never covers the form.
+const pageMobile = {
+  ...page,
+  minHeight: "100dvh",
+  display: "flex",
+  flexDirection: "column",
+};
+
+const wavesMobile = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  top: "auto",
+  width: "100%",
+  height: "34vh",
+  overflow: "hidden",
+  pointerEvents: "none",
+};
+
+// Fade the top of the band into the page so the artwork has no hard edge.
+const waveArtMobile = {
+  ...waveArt,
+  maskImage: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 45%)",
+  WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 45%)",
+};
+
+const logoLinkMobile = {
+  ...logoLink,
+  left: 14,
+  top: 10,
+  width: "clamp(140px, 45vw, 180px)",
+};
+
+const centerColumnMobile = {
+  ...centerColumn,
+  minHeight: "auto",
+  // Grow to fill the space above the mascot, then let the mascot sit at the
+  // bottom of the viewport (on top of the wave band).
+  flex: "1 0 auto",
+  padding: "78px 18px 8px",
+  justifyContent: "flex-start",
+  gap: 18,
+};
+
+const headingMobile = { ...heading, fontSize: 26 };
+
+const mascotWrapMobile = {
+  position: "relative",
+  alignSelf: "flex-end",
+  right: "auto",
+  bottom: "auto",
+  width: "clamp(140px, 42vw, 190px)",
+  margin: "4px 10px 14px auto",
+  pointerEvents: "none",
 };

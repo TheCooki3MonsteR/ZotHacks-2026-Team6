@@ -19,7 +19,7 @@ export default function FountainMapLoader({ height = 340, ...props }) {
         background: "#e7f1fb",
         display: "grid",
         placeItems: "center",
-        color: "#1c4e9e",
+        color: "#4D80AA",
         fontSize: 14,
         fontFamily: "Epilogue, -apple-system, Roboto, Helvetica, sans-serif",
       }}
