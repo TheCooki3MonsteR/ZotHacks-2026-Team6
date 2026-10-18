@@ -1,5 +1,6 @@
 "use client";
 
+import { LegendaryStyle, isLegendary } from "./legendaryFx";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { addReview, deleteReview, listReviews } from "../lib/reviews";
@@ -100,7 +101,12 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
         <div style={rewardBox} role="status">
           {reward.stickers.length > 0 ? (
             reward.stickers.map((s) => (
-              <div key={s.collectible_id} style={rewardRow}>
+              <div
+                key={s.collectible_id}
+                style={isLegendary(s) ? { ...rewardRow, ...legendRow } : rewardRow}
+                className={isLegendary(s) ? "legendary-fx" : undefined}
+              >
+                {isLegendary(s) && <LegendaryStyle />}
                 <img
                   src={stickerSrc(s.image_path)}
                   alt={s.name}
@@ -110,7 +116,9 @@ export default function FountainReviews({ fountainId, loggedIn, onChanged }) {
                   }}
                 />
                 <div>
-                  <strong style={{ color: BLUE }}>Sticker unlocked!</strong>
+                  <strong style={{ color: isLegendary(s) ? "#ffffff" : BLUE, position: "relative", zIndex: 1 }}>
+                    {isLegendary(s) ? "Legendary sticker unlocked!" : "Sticker unlocked!"}
+                  </strong>
                   <div style={{ fontSize: 15, fontWeight: 700 }}>{s.name}</div>
                   {s.rarity && (
                     <span style={{ ...rarityPill, ...(RARITY[s.rarity] ?? RARITY.common) }}>
@@ -304,6 +312,7 @@ const rewardBox = {
   gap: 8,
 };
 const rewardRow = { display: "flex", alignItems: "center", gap: 14 };
+const legendRow = { padding: "10px 14px", borderRadius: 10 };
 const rewardImg = { width: 84, height: 84, objectFit: "contain" };
 const rarityPill = {
   display: "inline-block",

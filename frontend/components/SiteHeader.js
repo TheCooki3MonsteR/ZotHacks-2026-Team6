@@ -32,8 +32,8 @@ export default function SiteHeader() {
           Map
         </Link>
         {loggedIn && (
-          <Link href="/collectables" style={linkStyle}>
-            Collectables
+          <Link href="/profile" style={linkStyle}>
+            Profile
           </Link>
         )}
         {loggedIn ? (

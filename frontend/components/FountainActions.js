@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { recordFountainVisit } from "../lib/clientApi";
 import WaterDrop from "./WaterDrop";
 import { useIsMobile } from "../lib/useIsMobile";
@@ -18,6 +19,7 @@ export default function FountainActions({
   const [used, setUsed] = useState(initialTimesVisited > 0);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const [toast, setToast] = useState(null); // { id, kind: "ok" | "cooldown" }
   const isMobile = useIsMobile();
 
   // Keep in sync when the parent learns a newer count (e.g. after posting a review).
@@ -25,6 +27,13 @@ export default function FountainActions({
     setTimes(initialTimesVisited);
     setUsed(initialTimesVisited > 0);
   }, [initialTimesVisited]);
+
+  // Hide the "+1" pop-up a couple of seconds after it appears.
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   // Logged-out visitors get the "log in" prompt from the reviews section instead.
   if (!username) {
@@ -39,9 +48,13 @@ export default function FountainActions({
       const res = await recordFountainVisit(fountainId);
       setTimes(res.times_visited);
       setUsed(true);
-      setNote("Refill logged!");
+      setToast({ id: Date.now(), kind: "ok" });
       onVisited?.(res.times_visited);
     } catch (err) {
+      if (err.cooldown) {
+        setToast({ id: Date.now(), kind: "cooldown" });
+        return;
+      }
       setNote(err.message || "Couldn't log your refill.");
     } finally {
       setBusy(false);
@@ -67,7 +80,7 @@ export default function FountainActions({
                   : primaryBtn
           }
         >
-          {used ? "Used it again" : "I used this fountain"}
+          {compact ? "Drank From" : used ? "Used it again" : "I used this fountain"}
           <WaterDrop height={16} style={{ marginLeft: 6 }} />
         </button>
 
@@ -80,11 +93,31 @@ export default function FountainActions({
         )}
       </div>
 
-      {note && (
-        <p style={noteStyle}>
-          {note} <WaterDrop height={13} />
-        </p>
-      )}
+      {note && <p style={errorStyle}>{note}</p>}
+
+      {/* Top-right pop-up. Portaled to <body> so card/modal transforms can't move it. */}
+      {toast &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            key={toast.id}
+            role="status"
+            aria-live="polite"
+            style={toastStyle}
+          >
+            <style>{TOAST_CSS}</style>
+            {toast.kind === "cooldown" ? (
+              <span style={{ fontWeight: 700 }}>Cooldown!</span>
+            ) : (
+              <>
+                <span style={{ fontWeight: 700 }}>+1</span>
+                <WaterDrop height={18} />
+                <span>Refill logged</span>
+              </>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
@@ -116,7 +149,29 @@ const compactBtn = {
 const count = { fontSize: 13, color: "#6b7b8a" };
 
 const hint = { fontSize: 13, color: "#6b7b8a", margin: "4px 0 0" };
-const noteStyle = { fontSize: 13, color: "#1c7a3e", margin: 0 };
+const errorStyle = { fontSize: 13, color: "#b3261e", margin: 0 };
+
+const TOAST_CSS =
+  "@keyframes zw-toast{0%{opacity:0;transform:translateY(-10px)}12%{opacity:1;transform:none}85%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}";
+const toastStyle = {
+  position: "fixed",
+  top: 70,
+  right: 20,
+  zIndex: 10000,
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "10px 16px",
+  borderRadius: 999,
+  background: "#ffffff",
+  color: "#23395d",
+  fontSize: 14,
+  fontFamily: 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif',
+  boxShadow: "0 6px 20px rgba(0,0,0,0.18)",
+  border: "1px solid #cfe0f3",
+  animation: "zw-toast 2.2s ease forwards",
+  pointerEvents: "none",
+};
 
 // ---- Mobile layout ----------------------------------------------------------
 const wrapMobile = { ...wrap, marginTop: 16 };

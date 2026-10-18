@@ -1,5 +1,6 @@
 "use client";
 
+import { LegendaryStyle, isLegendary } from "../../../components/legendaryFx";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMockUser } from "../../../lib/useMockUser";
@@ -7,7 +8,6 @@ import { loadStats } from "../../../lib/clientApi";
 import { stickerSrc } from "../../../lib/collection";
 import SiteHeader from "../../../components/SiteHeader";
 import WaterDrop from "../../../components/WaterDrop";
-import Rosette from "../../../components/Rosette";
 import { useIsMobile } from "../../../lib/useIsMobile";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
@@ -17,10 +17,10 @@ const CREAM = "#fbf4dc";
 
 // Little milestone rewards — the "collectable" side of the page.
 const BADGES = [
-  { id: "first", label: "First Sip", need: 1, variant: "outline" },
-  { id: "hydrated", label: "Hydrated", need: 5, variant: "tint" },
-  { id: "quench", label: "Quenched", need: 10, variant: "solid" },
-  { id: "poisoned", label: "Water Poisoned", need: 25, variant: "duo" },
+  { id: "first", label: "First Sip", need: 1, image: "/BronzePetr.png" },
+  { id: "hydrated", label: "Hydrated", need: 5, image: "/SilverPetr.png" },
+  { id: "quench", label: "Quenched", need: 10, image: "/GoldPetr.png" },
+  { id: "poisoned", label: "Water Poisoned", need: 25, image: "/GalaxyPetr.png" },
 ];
 
 function formatDate(value) {
@@ -34,7 +34,7 @@ function formatDate(value) {
   });
 }
 
-export default function CollectablesPage() {
+export default function ProfilePage() {
   const { user, loggedIn } = useMockUser();
   const isMobile = useIsMobile();
   const username = user?.username;
@@ -96,7 +96,7 @@ export default function CollectablesPage() {
 
       <main style={isMobile ? contentMobile : content}>
         <h1 style={isMobile ? titleMobile : title}>
-          Collectables <WaterDrop height={isMobile ? 26 : 34} style={{ marginLeft: 4 }} />
+          {mounted && username ? `Hi ${username}!` : "Hi there!"} <WaterDrop height={isMobile ? 26 : 34} style={{ marginLeft: 4 }} />
         </h1>
         <p style={isMobile ? subtitleMobile : subtitle}>Hydrate and Level up!</p>
 
@@ -124,7 +124,8 @@ export default function CollectablesPage() {
 
             {/* Milestones */}
             <h2 style={isMobile ? sectionTitleMobile : sectionTitle}>Milestones</h2>
-            <div style={isMobile ? badgeRowMobile : badgeRow}>
+            <div className="badge-row" style={isMobile ? badgeRowMobile : badgeRow}>
+              <style>{BADGE_CSS}</style>
               {BADGES.map((m) => {
                 const earned = totalVisits >= m.need;
                 return (
@@ -132,7 +133,11 @@ export default function CollectablesPage() {
                     key={m.id}
                     style={{ ...badge, opacity: earned ? 1 : 0.4 }}
                   >
-                    <Rosette variant={m.variant} size={56} />
+                    <img
+                      src={m.image}
+                      alt={`${m.label} Petr`}
+                      style={{ height: 150, width: "auto", objectFit: "contain" }}
+                    />
                     <span style={{ fontWeight: 700, fontSize: 14 }}>
                       {m.label}
                     </span>
@@ -156,16 +161,21 @@ export default function CollectablesPage() {
               </p>
             ) : (
               <div style={stickerGrid}>
+                <LegendaryStyle />
                 {stats.stickers.owned.map((s) => (
-                  <div key={s.collectible_id} style={stickerCard}>
+                  <div
+                    key={s.collectible_id}
+                    style={stickerCard}
+                    className={isLegendary(s) ? "legendary-fx" : undefined}
+                  >
                     <img
                       src={stickerSrc(s.image_path)}
                       alt={s.name}
                       style={stickerImg}
                     />
-                    <span style={{ fontWeight: 700, fontSize: 14 }}>{s.name}</span>
+                    <span style={{ fontWeight: 700, fontSize: 14, position: "relative", zIndex: 1 }}>{s.name}</span>
                     {s.rarity && (
-                      <span style={{ fontSize: 12, color: "#6b7b8a", textTransform: "capitalize" }}>
+                      <span style={{ fontSize: 12, color: isLegendary(s) ? "#f3e8ff" : "#6b7b8a", textTransform: "capitalize", position: "relative", zIndex: 1 }}>
                         {s.rarity}
                       </span>
                     )}
@@ -244,7 +254,6 @@ const stickerImg = { width: 110, height: 110, objectFit: "contain" };
 function Stat({ label, value, mobile = false }) {
   return (
     <div style={mobile ? statCardMobile : statCard}>
-      <WaterDrop height={mobile ? 22 : 26} />
       <span style={mobile ? statValueMobile : statValue}>{value}</span>
       <span style={statLabel}>{label}</span>
     </div>
@@ -305,9 +314,14 @@ const sectionTitle = {
   margin: "38px 0 16px",
 };
 
+// Always 4 across (or 2x2 on narrow screens) so the cards never wrap into an
+// uneven last row and the left/right margins stay equal as the window resizes.
+const BADGE_CSS =
+  ".badge-row{grid-template-columns:repeat(4,minmax(0,1fr))}" +
+  "@media (max-width:760px){.badge-row{grid-template-columns:repeat(2,minmax(0,1fr))}}";
+
 const badgeRow = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
   gap: 16,
 };
 
@@ -413,7 +427,6 @@ const sectionTitleMobile = { ...sectionTitle, fontSize: 22, margin: "28px 0 12px
 
 const badgeRowMobile = {
   display: "grid",
-  gridTemplateColumns: "repeat(2, 1fr)",
   gap: 12,
 };
 
