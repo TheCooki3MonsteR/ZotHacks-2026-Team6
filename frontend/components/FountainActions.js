@@ -103,11 +103,11 @@ const baseBtn = {
   fontFamily: 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif',
 };
 
-const primaryBtn = { ...baseBtn, background: "#1c4e9e", color: "#ffffff" };
-const secondaryBtn = { ...baseBtn, background: "#e7f1fb", color: "#1c4e9e" };
+const primaryBtn = { ...baseBtn, background: "#4D80AA", color: "#ffffff" };
+const secondaryBtn = { ...baseBtn, background: "#e7f1fb", color: "#4D80AA" };
 const compactBtn = {
   ...baseBtn,
-  background: "#1c4e9e",
+  background: "#4D80AA",
   color: "#ffffff",
   padding: "8px 14px",
   fontSize: 13,

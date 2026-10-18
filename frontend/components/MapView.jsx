@@ -8,7 +8,7 @@ import { useIsMobile } from "../lib/useIsMobile";
 // desktop layout from the device scan without losing the page's metadata export.
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
-const BLUE = "#1c4e9e";
+const BLUE = "#4D80AA";
 const CREAM = "#fbf4dc";
 
 export default function MapView() {

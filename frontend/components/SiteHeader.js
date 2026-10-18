@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMockUser } from "../lib/useMockUser";
 import { useIsMobile } from "../lib/useIsMobile";
+import WaterDrop from "./WaterDrop";
 
 export default function SiteHeader() {
   const { loggedIn, logout } = useMockUser();
@@ -14,7 +15,12 @@ export default function SiteHeader() {
   return (
     <header style={isMobile ? headerMobile : header}>
       <Link href="/" style={isMobile ? brandMobile : brand}>
-        Zot Water
+        Zot Water{" "}
+        <WaterDrop
+          height={isMobile ? 20 : 26}
+          alt=""
+          style={{ marginLeft: 4 }}
+        />
       </Link>
       {/* Inline styles can't do :hover, so the hover color lives in this tiny stylesheet. */}
       <style>{HOVER_CSS}</style>
@@ -46,7 +52,7 @@ export default function SiteHeader() {
 }
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
-const BLUE = "#1c4e9e";
+const BLUE = "#4D80AA";
 const NAV_BLUE = "#3e6fb8";
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 

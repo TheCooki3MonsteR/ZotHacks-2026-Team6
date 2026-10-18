@@ -12,7 +12,7 @@ import { useIsMobile } from "../../../lib/useIsMobile";
 
 const SERIF = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
 const SANS = 'Epilogue, -apple-system, Roboto, Helvetica, sans-serif';
-const BLUE = "#1c4e9e";
+const BLUE = "#4D80AA";
 const CREAM = "#fbf4dc";
 
 // Little milestone rewards — the "collectable" side of the page.

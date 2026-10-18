@@ -68,10 +68,10 @@ export default function AuthShell({ title, children }) {
         aria-label="Zot Water"
         style={logoSvg}
       >
-        <text fill="#6798C0" style={{ whiteSpace: "pre" }} xmlSpace="preserve" style={{ fontFamily: "inherit" }} fontSize="34" fontWeight="bold" letterSpacing="-0.02em">
+        <text fill="#4D80AA" style={{ whiteSpace: "pre" }} xmlSpace="preserve" style={{ fontFamily: "inherit" }} fontSize="34" fontWeight="bold" letterSpacing="-0.02em">
           <tspan x="81.3958" y="47.21">Zot Water</tspan>
         </text>
-        <path d="M273 11C271.44 20.02 260 28.63 260 37.24C260 45.85 265.824 52 273 52C280.176 52 286 45.85 286 37.24C286 28.63 274.56 20.02 273 11Z" fill="#6798C0" />
+        <path d="M273 11C271.44 20.02 260 28.63 260 37.24C260 45.85 265.824 52 273 52C280.176 52 286 45.85 286 37.24C286 28.63 274.56 20.02 273 11Z" fill="#4D80AA" />
         <path d="M273 17C271.8 23.82 263 30.33 263 36.84C263 43.35 267.48 48 273 48C278.52 48 283 43.35 283 36.84C283 30.33 274.2 23.82 273 17Z" fill="#99D6EB" />
         <ellipse cx="3.22639" cy="3.84235" rx="3.22639" ry="3.84235" transform="matrix(0.836572 0.547858 -0.533721 0.845661 271.113 23.7871)" fill="#FFFDF8" />
       </svg>
@@ -220,7 +220,7 @@ const heading = {
   fontSize: "clamp(28px, 3vw, 40px)",
   fontWeight: 700,
   letterSpacing: "0.01em",
-  color: "#6798C0",
+  color: "#4D80AA",
   textAlign: "center",
 };
 
